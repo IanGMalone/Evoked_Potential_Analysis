@@ -1,0 +1,41 @@
+'$BatchProcess|Example to do something to all data files in a directory
+
+const mask$ := "*.smrx";                     ' Change the mask to get a subset of smr files by name
+
+var savefolder$ := "D:\\Raw Data\\Working MEP Data\\Clean MEPsmr - EricaVerified\\";
+var saveext$ := ".mat";
+
+var files$[200];		                    ' Array to hold up to 200 files
+var numFiles%;			                    ' Number of files found
+var c%, h%;			                        ' Counter to loop through files, file handle
+
+FilePathSet("",0,"Select data directory");	' Prompts user to select directory
+numFiles%:= FileList(files$[], 0, mask$);   ' Fill array with filenames
+if numFiles%<1 then							' If no files found or an error...
+	Message("No data files in directory!");	' Display message and end script
+    halt;
+endif;
+
+for c%:=0 to numFiles%-1 do			        ' Loop through each file
+    h% := FileOpen(files$[c%], 0, 2);       ' Open the file
+    if (h% >= 0) then                       ' If the open worked OK
+        HandleFile(h%, files$[c%]);         ' Do whatever ...
+        view(h%);
+        FileClose(1, -1);                   ' Close file - note no query about saving
+    endif;
+next;
+halt;                                       ' and that's all folks
+
+' This is the function that does whatever you want to a file. The hand% parameter is the
+'  view handle for the file so you can get at it reliably, name$ is the name so you know
+'  what file it is - you might want to print the name above some results for example.
+Func HandleFile(hand%, name$);
+    printlog("Processing %s\n", name$);
+' put your code here
+' to do what you want
+ExportChanList(); 'Initialise the channel list
+ExportChanList(0, MaxTime(), -1);
+FileSaveAs(savefolder$ + name$ + saveext$,100,0,"",0, 
+"UseSName=0|UseCName=1|WaveTimes=0|BinFreq=0|BinTimes=0|WaveData=2|MarkAs=1|TMarkAs=2|RMarkAs=2|RMarkData=2|WaveMarkAs=2|WaveMarkData=2|Compat=0|WaveAll=1|WaveSameN=0"); 'Export (string args)
+return 0;
+end
