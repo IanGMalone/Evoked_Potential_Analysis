@@ -8,9 +8,6 @@ The purpose of this script is to process a batch of Spike2 .mat HDF5 files conta
 
 This script works with MATLAB files of version >= 7.3
 
-If this code helps you, please cite:
-
-
 
 To use:
     Save all .smr or .smrx files as .mat files
@@ -131,10 +128,16 @@ def round_to_5(number):
 
 
 
+
+
+
+
+
+
 # do processing on files
 startTime = datetime.now()
 
-rootdir = 'C:/Users/iangm/Desktop/gif/'
+rootdir = 'C:/Users/iangm/Desktop/MEPmat_py_analyze/'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
 
@@ -153,8 +156,11 @@ df_STA = df_MEP.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], a
 df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
 # save dataframes to CSV files
-df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_05_20_clean.csv', index = False)
-df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_05_20_clean.csv', index = False)
+df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
+df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
+
+
+
 
 
 
