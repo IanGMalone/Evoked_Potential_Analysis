@@ -4,6 +4,8 @@ Created on Mon Jun 15 19:11:41 2020
 
 @author: Ian G. Malone
 
+
+
 The purpose of this script is to load a single .smrx file into Python for the purpose of analysis and visualization.
 """
 
@@ -22,7 +24,7 @@ sns.set(style='ticks')
 
 
 # define functions
-def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
+def file_to_df(path, file_name, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 ):
     '''Input .mat file containing MEP data and return a dataframe'''
 
@@ -80,17 +82,6 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     
 
 
-def list_files(rootdir, extension='.mat'):
-    '''Return list of all files with specific extension in given directory (subfolders included)'''
-    
-    list_of_files=[]
-    
-    for subdir, dirs, files in os.walk(rootdir):
-        for file in files:
-            if file.endswith(extension):
-                list_of_files.append(file)
-
-    return list_of_files
 
 
 
@@ -119,7 +110,15 @@ def round_to_5(number):
 
 
 
+def mep_to_sta(df_mep):
+    '''Input a dataframe of motor evoked potentials, and output a dataframe of stimulus triggered averages'''
+    
+    df_STA = df_MEP
+    df_STA['EMG_Amplitude'] = df_STA['EMG_Amplitude'].abs()
+    df_STA = df_STA.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
+    df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
+    return df_STA
 
 
 
@@ -128,27 +127,23 @@ def round_to_5(number):
 # do processing on files
 startTime = datetime.now()
 
-rootdir = 'C:/Users/iangm/Desktop/MEPmat_py_analyze/'
-cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
-df_MEP = pd.DataFrame(columns=cols)
+filename = 'n19_4_mep.mat'
 
-for f in list_files(rootdir):
-    df_MEP = df_MEP.append(file_to_df(rootdir, f, df_MEP, cols))
+rootdir = 'C:/Users/iangm/Desktop/'
+cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
+df_MEP = file_to_df(rootdir, filename, cols)
 
 endTime = datetime.now()
 totalTime = endTime - startTime
 print('Total time: ', totalTime)
 
+#df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
+#df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
+
 
 
 # create STA dataframe from rectified MEP dataframe
-df_MEP['EMG_Amplitude'] = df_MEP['EMG_Amplitude'].abs()
-df_STA = df_MEP.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
-df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
-# save dataframes to CSV files
-df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
-df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
 
 
 
