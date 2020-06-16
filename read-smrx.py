@@ -71,3 +71,6 @@ meltdf.rename(columns={'variable':'side', 'value':'EMG Amplitude (V)'}, inplace=
 
 g = sns.FacetGrid(meltdf, row="side", height=1.7, aspect=4,)
 g.map(sns.lineplot, 'Time', 'EMG Amplitude (V)');
+
+
+meltdf.to_csv(r'C:\Users\iangm\Desktop\dffff.csv', index = False)
