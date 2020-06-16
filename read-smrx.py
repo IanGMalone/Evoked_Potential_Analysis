@@ -13,15 +13,14 @@ import numpy as np
 from scipy import signal
 import pandas as pd
 import h5py
-import os
 import seaborn as sns
-from datetime import datetime
+import matplotlib.pyplot as plt
 sns.set(style='ticks')
 
 
 
 path = 'C:/Users/iangm/Desktop/'
-file_name = 'n19_4_mep.mat'
+file_name = 'n10_1_mep.mat'
 
 
 # load file and extract keys
@@ -50,9 +49,25 @@ lEMG = raw_data[leftEMG]['values'][0]
 # samp_freq = 1/float(samp_freq[0][0].flatten())
 # rEMG = rEMG[0][0].flatten()
 # lEMG = lEMG[0][0].flatten()
+sample = np.arange(0, len(rEMG))
+time = sample/samp_freq
  
 # find location of stimulation pulses (sample number)
 stim_peaks = signal.find_peaks(stim, height=0.09, distance=6)
 peak_locs = stim_peaks[0]
 peak_heights = stim_peaks[1]['peak_heights']
     
+sns.lineplot(x=time[0:500000], y=lEMG[0:500000])
+plt.show()
+
+length=500000
+data = np.array([time[0:length], lEMG[0:length], rEMG[0:length]])
+data = np.transpose(data)
+df = pd.DataFrame(data=data, index=np.arange(length), columns=["Time", "Left Diaphragm EMG", "Right Diaphragm EMG"])
+
+meltdf = pd.melt(df, id_vars=['Time'], value_vars=['Left Diaphragm EMG', 'Right Diaphragm EMG'])
+meltdf.rename(columns={'variable':'side', 'value':'EMG Amplitude (V)'}, inplace=True)
+
+
+g = sns.FacetGrid(meltdf, row="side", height=1.7, aspect=4,)
+g.map(sns.lineplot, 'Time', 'EMG Amplitude (V)');
