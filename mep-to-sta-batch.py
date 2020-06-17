@@ -25,16 +25,14 @@ from scipy import signal
 import pandas as pd
 import h5py
 import os
-import seaborn as sns
 from datetime import datetime
-sns.set(style='ticks')
 
 
 
 # define functions
 def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 ):
-    '''Input .mat file containing MEP data and return a dataframe'''
+    '''Takes .mat file containing MEP data and returns a dataframe of that data'''
 
     # load file and extract keys
     filepath = path + file_name
@@ -45,10 +43,10 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     leftEMG_vars = ['LDia', 'LDIA', 'lEMG_raw']
     rightEMG_vars = ['RDia', 'RDIA', 'rEMG_raw']
     stim_vars = ['StimWav1', 'Stim', 'stim']
-    # if the below lines return errors, the above lines are probably not capturing all possible channel names
-    leftEMG = [key for v in leftEMG_vars for key in all_keys if v in key][0]
-    rightEMG = [key for v in rightEMG_vars for key in all_keys if v in key][0]
-    stim_wave = [key for v in stim_vars for key in all_keys if v in key][0]
+    # if the below lines return errors, the above lines are probably not capturing all possible channel names. The above lists must reflect all Spike2 channel names
+    leftEMG = [key for var in leftEMG_vars for key in all_keys if var in key][0]
+    rightEMG = [key for var in rightEMG_vars for key in all_keys if var in key][0]
+    stim_wave = [key for var in stim_vars for key in all_keys if var in key][0]
 
     # unpack variables from .mat file
     animal = file_name.split('_')[0]
@@ -64,13 +62,14 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     # lEMG = lEMG[0][0].flatten()
      
     # find location of stimulation pulses (sample number)
+    # VERIFY THIS SECTION!!!!!!!
     stim_peaks = signal.find_peaks(stim, height=0.09, distance=6)
     peak_locs = stim_peaks[0]
     peak_heights = stim_peaks[1]['peak_heights']
     
     # get chunks of meps and make dataframe
     df_mep = pd.DataFrame(columns=col_names)
-    mep_time_ms = 12
+    mep_time_ms = 12 #make this an argument?!!!!!!!
     mep_sample_length = round((mep_time_ms/1000)*samp_freq)
 
     for i in np.arange(len(peak_locs)):
@@ -78,6 +77,8 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
         df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
     
     
+    # This section is here due to early animals having a different sampling frequency
+    # VERIFY THIS !!!!!!!!
     early_list= ['n01', 'n02', 'n03', 'n04', 'n05', 'n06', 'n07', 'n08',\
              'n09', 'n10', 'n11', 'n12', 'n13']
 

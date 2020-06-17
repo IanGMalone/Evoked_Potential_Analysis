@@ -15,9 +15,7 @@ import numpy as np
 from scipy import signal
 import pandas as pd
 import h5py
-import seaborn as sns
 from datetime import datetime
-sns.set(style='ticks')
 
 
 
@@ -36,9 +34,9 @@ def file_to_df(path, file_name, col_names=['Animal', 'Day', 'Side', 'Stim_Amplit
     rightEMG_vars = ['RDia', 'RDIA', 'rEMG_raw']
     stim_vars = ['StimWav1', 'Stim', 'stim']
     # if the below lines return errors, the above lines are probably not capturing all possible channel names
-    leftEMG = [key for v in leftEMG_vars for key in all_keys if v in key][0]
-    rightEMG = [key for v in rightEMG_vars for key in all_keys if v in key][0]
-    stim_wave = [key for v in stim_vars for key in all_keys if v in key][0]
+    leftEMG = [key for var in leftEMG_vars for key in all_keys if var in key][0]
+    rightEMG = [key for var in rightEMG_vars for key in all_keys if var in key][0]
+    stim_wave = [key for var in stim_vars for key in all_keys if var in key][0]
 
     # unpack variables from .mat file
     animal = file_name.split('_')[0]
