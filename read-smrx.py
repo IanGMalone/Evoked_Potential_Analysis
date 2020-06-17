@@ -3,6 +3,7 @@
 Created on Mon Jun 15 19:38:32 2020
 
 @author: Ian G. Malone
+https://github.com/IanGMalone
 
 The purpose of this script is to load a .smrx file in order to plot raw 
 ephys data.

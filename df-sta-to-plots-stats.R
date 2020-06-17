@@ -1,6 +1,8 @@
 # 
 # Created on April 12, 2020
+#
 # by Ian G. Malone
+# https://github.com/IanGMalone
 # 
 # The purpose of this script is to load a csv file containing stimulus-triggered
 # average data and output relevant visualizations and statistics.

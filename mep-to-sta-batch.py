@@ -3,17 +3,18 @@
 Created on Tue Apr  7 15:41:18 2020
 
 @author: Ian G. Malone
+https://github.com/IanGMalone
 
 The purpose of this script is to process a batch of Spike2 .mat HDF5 files containing EMG data of motor-evoked potentials. Relevant data in the Spike2 files are left EMG, right EMG, and stimulus waveforms. The outputs include a dataframe of the motor-evoked potentials as well as a dataframe of the calculated stimulus-triggered averages.
 
 This script works with MATLAB files of version >= 7.3
-
 
 To use:
     Save all .smr or .smrx files as .mat files
     Make sure they are .mat version 7.3 or later
     Uncheck 'use source name in MatLab variable names'
     Check 'use source channel name in MatLab variable names'
+    Run this script on the parent folder containing these .mat files
 """
 
 

@@ -3,10 +3,9 @@
 Created on Mon Jun 15 19:11:41 2020
 
 @author: Ian G. Malone
+https://github.com/IanGMalone
 
-
-
-The purpose of this script is to load a single .smrx file into Python for the purpose of analysis and visualization.
+The purpose of this script is to create a dataframe from a single Spike2 .mat HDF5 file.
 """
 
 
@@ -16,7 +15,6 @@ import numpy as np
 from scipy import signal
 import pandas as pd
 import h5py
-import os
 import seaborn as sns
 from datetime import datetime
 sns.set(style='ticks')
@@ -137,7 +135,7 @@ endTime = datetime.now()
 totalTime = endTime - startTime
 print('Total time: ', totalTime)
 
-#df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
+df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
 #df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
 
 
