@@ -17,7 +17,7 @@
 library(ggplot2)
 library(ggthemes)
 library(data.table)
-library(DescTools)
+#library(DescTools) not needed?
 library(pracma) # trapz function
 
 
@@ -139,7 +139,7 @@ dt_STA_d1234_AUC[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stim
 dt_STA_d1234_AUC[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
 
 
-#write.csv(dt_STA_d1d4_pchange, 'C:\\Users\\iangm\\Google Drive\\UF\\Lab\\Data & Figures\\Mw0rgan.csv')
+write.csv(dt_STA_d1d4_pchange, 'C:\\Users\\iangm\\desktop\\d1d4-pchange.csv')
 
 
 
@@ -151,12 +151,30 @@ dt_STA_d1234_AUC[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No
 
 ## in progress plots
 #WHERE IS N11 ?????????
-dots <- ggplot(subset(dt_STA_d1d4_pchange, Animal %in% c('N09', 'N10', 'N13')), aes(x=Stim_Amplitude, y=Percent_Change_AUC, color=Animal)) +
+dots <- ggplot(subset(dt_STA_d1d4_pchange, Animal %in% c('N09', 'N10', 'N11', 'N13')), aes(x=Stim_Amplitude, y=Percent_Change_AUC, color=Animal)) +
   geom_point(alpha=0.7)
 dots
 
-Day.labs <- c("Day 1", "Day 2", "Day 3", "Day 4")
-names(Day.labs) <- c("1", "2", "3", "4")
+
+
+animals = c('N01')
+
+staplot <- ggplot(subset(dt_STA_d1d4, Animal %in% animals & Day %in% c(1,4) & Stim_Amplitude %in% c(100, 400)),
+                  aes(x=Sample, y=STA_Amplitude, color=factor(Stim_Amplitude))) +
+  geom_point(alpha=0.4) +
+  facet_wrap(~Day)
+staplot
+
+
+
+
+plot_data_column = function (data, column) {
+  ggplot(data, aes_string(x = column)) +
+    geom_histogram(fill = "lightgreen") +
+    xlab(column)
+}
+
+myplots <- lapply(colnames(data2), plot_data_column, data = data2)
 
 
   
@@ -174,6 +192,8 @@ gpcd14 <- ggplot(dt_STA_d1d4_pchange, aes(x=Stim_Amplitude, y=Percent_Change_AUC
 gpcd14
 
 
+Day.labs <- c("Day 1", "Day 2", "Day 3", "Day 4")
+names(Day.labs) <- c("1", "2", "3", "4")
 AUC_d1234 <- ggplot(dt_STA_d1234_AUC, aes(x=Stim_Amplitude, y=Normalized_AUC, color=Group)) +
   geom_point(alpha=0.8) +
   facet_grid(rows = vars(Day), labeller = labeller(Day = Day.labs)) +

@@ -77,11 +77,10 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
         df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
     
     
-    # This section is here due to early animals having a different sampling frequency
-    # VERIFY THIS !!!!!!!!
+    # This section is here due to early animals showing different stimulation amplitudes
+    #!!!!!!!! what about sampling frequency?
     early_list= ['n01', 'n02', 'n03', 'n04', 'n05', 'n06', 'n07', 'n08',\
              'n09', 'n10', 'n11', 'n12', 'n13']
-
     if animal in early_list:
         df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*100)
     else:
@@ -139,13 +138,16 @@ def round_to_5(number):
 # do processing on files
 startTime = datetime.now()
 
+# specify locations and files and make empty dataframe
 rootdir = 'C:/Users/iangm/Desktop/MEPmat_py_analyze/'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
 
+# append dataframes for all files to make one big dataframe
 for f in list_files(rootdir):
     df_MEP = df_MEP.append(file_to_df(rootdir, f, df_MEP, cols))
 
+# measure how long the big dataframe creation took to execute
 endTime = datetime.now()
 totalTime = endTime - startTime
 print('Total time: ', totalTime)
@@ -153,6 +155,8 @@ print('Total time: ', totalTime)
 
 
 # create STA dataframe from rectified MEP dataframe
+# !!!!!!!!!!!!you need to check this 
+# maybe dont rectify... you can do that in R, but would be nice to see actual STA plotted
 df_MEP['EMG_Amplitude'] = df_MEP['EMG_Amplitude'].abs()
 df_STA = df_MEP.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
 df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
