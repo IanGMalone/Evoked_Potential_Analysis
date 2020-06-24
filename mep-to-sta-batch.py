@@ -187,9 +187,9 @@ def resample(smp, scale=1.0):
     # Both are OK, but since resampling will often involve
     # exact ratios (i.e. for 44100 to 22050 or vice versa)
     # using endpoint=False gets less noise in the resampled sound
-    return numpy.interp(
-        numpy.linspace(0.0, 1.0, n, endpoint=False), # where to interpret
-        numpy.linspace(0.0, 1.0, len(smp), endpoint=False), # known positions
+    return np.interp(
+        np.linspace(0.0, 1.0, n, endpoint=False), # where to interpret
+        np.linspace(0.0, 1.0, len(smp), endpoint=False), # known positions
         smp, # known data points
         )
 

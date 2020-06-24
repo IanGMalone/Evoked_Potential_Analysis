@@ -7,8 +7,8 @@
 # The purpose of this script is to load a csv file containing stimulus-triggered
 # average data and output relevant visualizations and statistics.
 # 
-# This is a work in progress.
 #
+
 
 ######### !! June 23, 2020 - df_STA will not be rectified now (change this script to rectify for AUC)
 
@@ -17,7 +17,6 @@
 library(ggplot2)
 library(ggthemes)
 library(data.table)
-#library(DescTools) not needed?
 library(pracma) # trapz function
 
 
@@ -31,65 +30,75 @@ percent_change <- function(old_val, new_val) {
 
 
 #### load STA data as dataframe
-df_STA <- data.frame(read.csv('C:/Users/iangm/Desktop/df_STA_2020_06_14_clean.csv'))
-df_STA[,'Animal'] = toupper(df_STA[,'Animal'])
-dt_STA <- data.table(df_STA)
-# dt_STA <- dt_STA[,X:=NULL] # might not need <- here
+df <- data.frame(read.csv('C:/Users/iangm/Desktop/df_STA_2020_06_14_clean.csv'))
+df[,'Animal'] = toupper(df[,'Animal'])
+dt_STA <- data.table(df)
 
 
 
 #### define animal groups
 injstim <- c("N09", "N10", "N11", "N13")
-injnostim <- c("N08", "N12", "N14", "N15", "N16", "N21", "N22", "N23")
+injnostim <- c("N14", "N15", "N16", "N21", "N22", "N23")
 noinjstim <- c("N01", "N04", "N05")
-noinjnostim <- c("N06", "N07", "N17", "N19", "N20", "N24", "N25", "N26")
-injcdrstim <- c("CD01", "CD02")
-injtrkbstim <- c("T01")
-injnoemgnostim <- c("EZ01", "EZ02")
-noinjnoemgnostim <- c("EZ03", "EZ04")
+noinjnostim <- c("N17", "N19", "N20", "N24", "N25", "N26")
+# injcdrstim <- c("CD01", "CD02")
+# injtrkbstim <- c("T01")
+# injnoemgnostim <- c("EZ01", "EZ02")
+# noinjnoemgnostim <- c("EZ03", "EZ04")
 
 
 
-#### data table for day 1 and 4... subset only day 1 and day 4
-#### remove stim artifact (samples 0:50), only left side
-dt_STA_d1d4 <- subset(dt_STA, Day %in% c(1, 4) & Sample %in% c(50:300) & Side %in% c('Left'))
-dt_STA_d1234 <- subset(dt_STA, Day %in% c(1, 2, 3, 4) & Sample %in% c(50:300) & Side %in% c('Left'))
+#### make data table for day 1, 2, 3, 4
+#### remove stim artifact (samples 0:50) <---- maybe remove less than 50 (50 samples = 2.5ms)
+#### only keep left side EMG in data table
+dt_STA <- subset(dt_STA, Day %in% c(1, 2, 3, 4) & Sample %in% c(50:300) & Side %in% c('Left'))
+#dt_STA_d1d4 <- subset(dt_STA, Day %in% c(1, 4) & Sample %in% c(50:300) & Side %in% c('Left')) #redundant
 
 
 #### calculate AUC, dropping the Sample and STA_Amplitude columns
-dt_STA_d1d4_AUC <- dt_STA_d1d4[, 
-                         .(
-                           AUC = trapz(Sample, STA_Amplitude)
-                         ),
-                         by = .(Animal, Day, Side, Stim_Amplitude)]
-dt_STA_d1234_AUC <- dt_STA_d1234[, 
+dt_STA <- dt_STA[, 
                                .(
                                  AUC = trapz(Sample, STA_Amplitude)
                                ),
                                by = .(Animal, Day, Side, Stim_Amplitude)]
+# dt_STA_d1d4_AUC <- dt_STA_d1d4[, 
+#                                .(
+#                                  AUC = trapz(Sample, STA_Amplitude)
+#                                ),
+#                                by = .(Animal, Day, Side, Stim_Amplitude)]
 
 
 
 #### calculate % change, dropping the Day and AUC columns
 #### break Day column into columns for day 1 AUC and day 4 AUC
-dt_STA_d1d4_pchange <- dcast(dt_STA_d1d4_AUC, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
-dt_STA_d1234_AUC <- dcast(dt_STA_d1234_AUC, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
+dt_STA <- dcast(dt_STA, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
+# dt_STA_d1d4_pchange <- dcast(dt_STA_d1d4_AUC, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
 
 
 #### rename columns
-names(dt_STA_d1d4_pchange)[names(dt_STA_d1d4_pchange) == "1"] = "Day1_AUC"
-names(dt_STA_d1d4_pchange)[names(dt_STA_d1d4_pchange) == "4"] = "Day4_AUC"
+names(dt_STA)[names(dt_STA) == "1"] = "Day1_AUC"
+names(dt_STA)[names(dt_STA) == "2"] = "Day2_AUC"
+names(dt_STA)[names(dt_STA) == "3"] = "Day3_AUC"
+names(dt_STA)[names(dt_STA) == "4"] = "Day4_AUC"
 
 
 #### remove rows that have NA values 
-dt_STA_d1d4_pchange <- na.omit(dt_STA_d1d4_pchange, cols=c("Day1_AUC", "Day4_AUC"))
-dt_STA_d1234_AUC <- na.omit(dt_STA_d1234_AUC, cols=c("Day1_AUC", "Day2_AUC", "Day3_AUC", "Day4_AUC"))
+#dt_STA <- na.omit(dt_STA, cols=c("Day1_AUC", "Day2_AUC", "Day3_AUC", "Day4_AUC"))
+# dt_STA_d1d4_pchange <- na.omit(dt_STA_d1d4_pchange, cols=c("Day1_AUC", "Day4_AUC"))
 
-#### normalize
-dt_STA_d1234_AUC[,7] = dt_STA_d1234_AUC[,7] / dt_STA_d1234_AUC[,4] 
-dt_STA_d1234_AUC[,6] = dt_STA_d1234_AUC[,6] / dt_STA_d1234_AUC[,4] 
-dt_STA_d1234_AUC[,5] = dt_STA_d1234_AUC[,5] / dt_STA_d1234_AUC[,4] 
-dt_STA_d1234_AUC[,4] = dt_STA_d1234_AUC[,4] / dt_STA_d1234_AUC[,4] 
+
+#### normalize  <----!!!make this where you call percent_change function
+# dt_STA_d1234_AUC[,7] = dt_STA_d1234_AUC[,7] / dt_STA_d1234_AUC[,4] 
+# dt_STA_d1234_AUC[,6] = dt_STA_d1234_AUC[,6] / dt_STA_d1234_AUC[,4] 
+# dt_STA_d1234_AUC[,5] = dt_STA_d1234_AUC[,5] / dt_STA_d1234_AUC[,4] 
+# dt_STA_d1234_AUC[,4] = dt_STA_d1234_AUC[,4] / dt_STA_d1234_AUC[,4] 
+
+
+#### calculate percent change from day 1 for each day, make new columns
+dt_STA[, Day1_PercentChange := percent_change(Day1_AUC, Day1_AUC)]
+dt_STA[, Day2_PercentChange := percent_change(Day1_AUC, Day2_AUC)]
+dt_STA[, Day3_PercentChange := percent_change(Day1_AUC, Day3_AUC)]
+dt_STA[, Day4_PercentChange := percent_change(Day1_AUC, Day4_AUC)]
 
 
 #### melt
@@ -124,19 +133,19 @@ dt_STA_d1d4_pchange[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
 dt_STA_d1d4_pchange[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
 dt_STA_d1d4_pchange[Animal %in% noinjstim, Group := "No Injury + Stimulation, n=3"]
 dt_STA_d1d4_pchange[Animal %in% noinjnostim, Group := "No Injury + No Stimulation, n=6"]
-dt_STA_d1d4_pchange[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
-dt_STA_d1d4_pchange[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
-dt_STA_d1d4_pchange[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
-dt_STA_d1d4_pchange[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
+# dt_STA_d1d4_pchange[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
+# dt_STA_d1d4_pchange[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
+# dt_STA_d1d4_pchange[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
+# dt_STA_d1d4_pchange[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
 
 dt_STA_d1234_AUC[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
 dt_STA_d1234_AUC[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
 dt_STA_d1234_AUC[Animal %in% noinjstim, Group := "No Injury + Stimulation, n=3"]
 dt_STA_d1234_AUC[Animal %in% noinjnostim, Group := "No Injury + No Stimulation, n=6"]
-dt_STA_d1234_AUC[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
-dt_STA_d1234_AUC[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
-dt_STA_d1234_AUC[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
-dt_STA_d1234_AUC[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
+# dt_STA_d1234_AUC[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
+# dt_STA_d1234_AUC[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
+# dt_STA_d1234_AUC[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
+# dt_STA_d1234_AUC[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
 
 
 write.csv(dt_STA_d1d4_pchange, 'C:\\Users\\iangm\\desktop\\d1d4-pchange.csv')
