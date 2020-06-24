@@ -57,21 +57,27 @@ time = sample/samp_freq
 stim_peaks = signal.find_peaks(stim, height=0.09, distance=6)
 peak_locs = stim_peaks[0]
 peak_heights = stim_peaks[1]['peak_heights']
-    
-sns.lineplot(x=time[0:500000], y=lEMG[0:500000])
-plt.show()
-
-length=500000
-data = np.array([time[0:length], lEMG[0:length], rEMG[0:length]])
-data = np.transpose(data)
-df = pd.DataFrame(data=data, index=np.arange(length), columns=["Time", "Left Diaphragm EMG", "Right Diaphragm EMG"])
-
-meltdf = pd.melt(df, id_vars=['Time'], value_vars=['Left Diaphragm EMG', 'Right Diaphragm EMG'])
-meltdf.rename(columns={'variable':'side', 'value':'EMG Amplitude (V)'}, inplace=True)
 
 
-g = sns.FacetGrid(meltdf, row="side", height=1.7, aspect=4,)
-g.map(sns.lineplot, 'Time', 'EMG Amplitude (V)');
-
-
-meltdf.to_csv(r'C:\Users\iangm\Desktop\dffff.csv', index = False)
+mep_time_ms = 12 
+mep_sample_length = round((mep_time_ms/1000)*samp_freq)
+# =============================================================================
+#     
+# sns.lineplot(x=time[0:500000], y=lEMG[0:500000])
+# plt.show()
+# 
+# length=500000
+# data = np.array([time[0:length], lEMG[0:length], rEMG[0:length]])
+# data = np.transpose(data)
+# df = pd.DataFrame(data=data, index=np.arange(length), columns=["Time", "Left Diaphragm EMG", "Right Diaphragm EMG"])
+# 
+# meltdf = pd.melt(df, id_vars=['Time'], value_vars=['Left Diaphragm EMG', 'Right Diaphragm EMG'])
+# meltdf.rename(columns={'variable':'side', 'value':'EMG Amplitude (V)'}, inplace=True)
+# 
+# 
+# g = sns.FacetGrid(meltdf, row="side", height=1.7, aspect=4,)
+# g.map(sns.lineplot, 'Time', 'EMG Amplitude (V)');
+# 
+# 
+# meltdf.to_csv(r'C:\Users\iangm\Desktop\dffff.csv', index = False)
+# =============================================================================

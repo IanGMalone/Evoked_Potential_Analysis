@@ -123,7 +123,7 @@ def mep_to_sta(df_mep):
 # do processing on files
 startTime = datetime.now()
 
-filename = 'n19_4_mep.mat'
+filename = 'n10_1_mep.mat'
 
 rootdir = 'C:/Users/iangm/Desktop/'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
@@ -133,7 +133,7 @@ endTime = datetime.now()
 totalTime = endTime - startTime
 print('Total time: ', totalTime)
 
-df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
+#df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
 #df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
 
 

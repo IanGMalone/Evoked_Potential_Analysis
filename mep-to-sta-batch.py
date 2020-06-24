@@ -72,6 +72,8 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     # get chunks of meps and make dataframe
     df_mep = pd.DataFrame(columns=col_names)
     #!!!!! make ms an argument?
+    # Animals <= N13 were sampled at 20 kHz, animals > N13 were at 25 kHz
+    early_list= ['n01','n04','n05','n09','n10','n11','n13']
     mep_time_ms = 12 
     mep_sample_length = round((mep_time_ms/1000)*samp_freq)
 
@@ -79,9 +81,7 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
         df_mep = df_mep.append(mep_to_df(animal, day, 'Left', peak_heights[i], lEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
         df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
     
-    # Animals <= N13 were sampled at 20 kHz, animals > N13 were at 25 kHz
-    # 400 uA is 4.0 for animals <= N13, 0.4 for animals > N13
-    early_list= ['n01','n04','n05','n09','n10','n11','n13']
+    # 400 uA is 4.0 for animals <= N13, 0.4 for animals > N1
     if animal in early_list:
         df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*100)
     else:
