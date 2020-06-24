@@ -10,7 +10,11 @@
 #
 
 
-######### !! June 23, 2020 - df_STA will not be rectified now (change this script to rectify for AUC)
+#!!! June 23, 2020 - df_STA will not be rectified now (change this script to rectify for AUC)
+
+
+
+#### ---- importing libraries and defining functions ---- ####
 
 
 #### import libraries
@@ -18,7 +22,6 @@ library(ggplot2)
 library(ggthemes)
 library(data.table)
 library(pracma) # trapz function
-
 
 
 #### define functions
@@ -29,11 +32,45 @@ percent_change <- function(old_val, new_val) {
 
 
 
+#### ---- data wrangling and analysis ---- ####
+
+
 #### load STA data as dataframe
 df <- data.frame(read.csv('C:/Users/iangm/Desktop/df_STA_2020_06_14_clean.csv'))
 df[,'Animal'] = toupper(df[,'Animal'])
 dt_STA <- data.table(df)
 
+
+#### make data table for day 1, 2, 3, 4
+#### remove stim artifact (samples 0:50) <---- maybe remove less than 50 (50 samples = 2.5ms)
+#### only keep left side EMG in data table
+dt_STA <- subset(dt_STA, Day %in% c(1, 2, 3, 4) & Sample %in% c(50:300) & Side %in% c('Left'))
+
+
+#### calculate AUC, dropping the Sample and STA_Amplitude columns
+dt_STA <- dt_STA[, 
+                               .(
+                                 AUC = trapz(Sample, STA_Amplitude)
+                               ),
+                               by = .(Animal, Day, Side, Stim_Amplitude)]
+
+
+#### break Day column into columns for day 1 AUC and day 4 AUC
+dt_STA <- dcast(dt_STA, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
+
+
+#### rename columns
+names(dt_STA)[names(dt_STA) == "1"] = "Day1_AUC"
+names(dt_STA)[names(dt_STA) == "2"] = "Day2_AUC"
+names(dt_STA)[names(dt_STA) == "3"] = "Day3_AUC"
+names(dt_STA)[names(dt_STA) == "4"] = "Day4_AUC"
+
+
+#### calculate percent change from day 1 for each day, make new columns
+dt_STA[, Day1_PercentChange := percent_change(Day1_AUC, Day1_AUC)]
+dt_STA[, Day2_PercentChange := percent_change(Day1_AUC, Day2_AUC)]
+dt_STA[, Day3_PercentChange := percent_change(Day1_AUC, Day3_AUC)]
+dt_STA[, Day4_PercentChange := percent_change(Day1_AUC, Day4_AUC)]
 
 
 #### define animal groups
@@ -47,123 +84,41 @@ noinjnostim <- c("N17", "N19", "N20", "N24", "N25", "N26")
 # noinjnoemgnostim <- c("EZ03", "EZ04")
 
 
-
-#### make data table for day 1, 2, 3, 4
-#### remove stim artifact (samples 0:50) <---- maybe remove less than 50 (50 samples = 2.5ms)
-#### only keep left side EMG in data table
-dt_STA <- subset(dt_STA, Day %in% c(1, 2, 3, 4) & Sample %in% c(50:300) & Side %in% c('Left'))
-#dt_STA_d1d4 <- subset(dt_STA, Day %in% c(1, 4) & Sample %in% c(50:300) & Side %in% c('Left')) #redundant
-
-
-#### calculate AUC, dropping the Sample and STA_Amplitude columns
-dt_STA <- dt_STA[, 
-                               .(
-                                 AUC = trapz(Sample, STA_Amplitude)
-                               ),
-                               by = .(Animal, Day, Side, Stim_Amplitude)]
-# dt_STA_d1d4_AUC <- dt_STA_d1d4[, 
-#                                .(
-#                                  AUC = trapz(Sample, STA_Amplitude)
-#                                ),
-#                                by = .(Animal, Day, Side, Stim_Amplitude)]
+#### add animal group column
+dt_STA[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
+dt_STA[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
+dt_STA[Animal %in% noinjstim, Group := "No Injury + Stimulation, n=3"]
+dt_STA[Animal %in% noinjnostim, Group := "No Injury + No Stimulation, n=6"]
+# dt_STA[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
+# dt_STA[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
+# dt_STA[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
+# dt_STA[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
 
 
-
-#### calculate % change, dropping the Day and AUC columns
-#### break Day column into columns for day 1 AUC and day 4 AUC
-dt_STA <- dcast(dt_STA, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
-# dt_STA_d1d4_pchange <- dcast(dt_STA_d1d4_AUC, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
-
-
-#### rename columns
-names(dt_STA)[names(dt_STA) == "1"] = "Day1_AUC"
-names(dt_STA)[names(dt_STA) == "2"] = "Day2_AUC"
-names(dt_STA)[names(dt_STA) == "3"] = "Day3_AUC"
-names(dt_STA)[names(dt_STA) == "4"] = "Day4_AUC"
-
-
-#### remove rows that have NA values 
-#dt_STA <- na.omit(dt_STA, cols=c("Day1_AUC", "Day2_AUC", "Day3_AUC", "Day4_AUC"))
-# dt_STA_d1d4_pchange <- na.omit(dt_STA_d1d4_pchange, cols=c("Day1_AUC", "Day4_AUC"))
-
-
-#### normalize  <----!!!make this where you call percent_change function
-# dt_STA_d1234_AUC[,7] = dt_STA_d1234_AUC[,7] / dt_STA_d1234_AUC[,4] 
-# dt_STA_d1234_AUC[,6] = dt_STA_d1234_AUC[,6] / dt_STA_d1234_AUC[,4] 
-# dt_STA_d1234_AUC[,5] = dt_STA_d1234_AUC[,5] / dt_STA_d1234_AUC[,4] 
-# dt_STA_d1234_AUC[,4] = dt_STA_d1234_AUC[,4] / dt_STA_d1234_AUC[,4] 
-
-
-#### calculate percent change from day 1 for each day, make new columns
-dt_STA[, Day1_PercentChange := percent_change(Day1_AUC, Day1_AUC)]
-dt_STA[, Day2_PercentChange := percent_change(Day1_AUC, Day2_AUC)]
-dt_STA[, Day3_PercentChange := percent_change(Day1_AUC, Day3_AUC)]
-dt_STA[, Day4_PercentChange := percent_change(Day1_AUC, Day4_AUC)]
+#--------------------------------- make new dt, dt_STA_long with columns Day, AUC, Percent_Change
 
 
 #### melt
-dt_STA_d1234_AUC = melt(dt_STA_d1234_AUC, id.vars = c("Animal", "Side", "Stim_Amplitude"),
-            measure.vars = c("1", "2", "3", "4"))
-names(dt_STA_d1234_AUC)[names(dt_STA_d1234_AUC) == "variable"] = "Day"
-names(dt_STA_d1234_AUC)[names(dt_STA_d1234_AUC) == "value"] = "Normalized_AUC"
+dt_STA_testt = melt(dt_STA, id = c("Animal", "Side", "Stim_Amplitude", "Group"))
+dt_STA_testt[, c("Day", "Measure") := tstrsplit(variable, "_", fixed = TRUE)]
+dt_STA_testt[,variable:=NULL]
+dt_STA_testt <- dcast(dt_STA_testt, Animal + Side + Stim_Amplitude + Group + Day ~ Measure, value.var = "value")
+setnames(dt_STA_testt, "PercentChange", "Percent_Change")
+setcolorder(dt_STA_testt, c("Animal", "Side", "Stim_Amplitude", "Day", "AUC", "Percent_Change", "Group"))
+
+
+#### save dt to a .csv
+#write.csv(dt_STA, 'C:\\Users\\iangm\\desktop\\dt_STA.csv')
 
 
 
+#### ---- plotting ---- ####
 
-#### calculate percent change from day 1 to day 4, dropping Day1_AUC and Day14_AUC columns
-dt_STA_d1d4_pchange <- dt_STA_d1d4_pchange[, 
-                               .(
-                                 Percent_Change_AUC = percent_change(Day1_AUC, Day4_AUC)
-                               ),
-                               by = .(Animal, Side, Stim_Amplitude)]
-
-
-
-#### calculate mean % change and replace the % change column
-dt_STA_d1d4_mpchange <- dt_STA_d1d4_pchange[, 
-                                           .(
-                                             Mean_Percent_Change_AUC = mean(Percent_Change_AUC)
-                                           ),
-                                           by = .(Animal, Side)]
-
-
-
-#### add animal group column (do this at the end to make analysis easier)
-dt_STA_d1d4_pchange[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
-dt_STA_d1d4_pchange[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
-dt_STA_d1d4_pchange[Animal %in% noinjstim, Group := "No Injury + Stimulation, n=3"]
-dt_STA_d1d4_pchange[Animal %in% noinjnostim, Group := "No Injury + No Stimulation, n=6"]
-# dt_STA_d1d4_pchange[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
-# dt_STA_d1d4_pchange[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
-# dt_STA_d1d4_pchange[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
-# dt_STA_d1d4_pchange[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
-
-dt_STA_d1234_AUC[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
-dt_STA_d1234_AUC[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
-dt_STA_d1234_AUC[Animal %in% noinjstim, Group := "No Injury + Stimulation, n=3"]
-dt_STA_d1234_AUC[Animal %in% noinjnostim, Group := "No Injury + No Stimulation, n=6"]
-# dt_STA_d1234_AUC[Animal %in% injcdrstim, Group := "Injury + CDR + Stimulation"]
-# dt_STA_d1234_AUC[Animal %in% injtrkbstim, Group := "Injury + siTrkB + Stimulation"]
-# dt_STA_d1234_AUC[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
-# dt_STA_d1234_AUC[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
-
-
-write.csv(dt_STA_d1d4_pchange, 'C:\\Users\\iangm\\desktop\\d1d4-pchange.csv')
-
-
-
-
-
-
-
-#### plot
-
-## in progress plots
+#### in progress plots
 #WHERE IS N11 ?????????
 dots <- ggplot(subset(dt_STA_d1d4_pchange, Animal %in% c('N09', 'N10', 'N11', 'N13')), aes(x=Stim_Amplitude, y=Percent_Change_AUC, color=Animal)) +
   geom_point(alpha=0.7)
 dots
-
 
 
 animals = c('N26')
@@ -171,8 +126,6 @@ ggplot(subset(dt_STA_d1d4, Animal %in% animals & Day %in% c(1,4) & Stim_Amplitud
                   aes(x=Sample, y=STA_Amplitude, color=factor(Stim_Amplitude))) +
   geom_point(alpha=0.4) +
   facet_wrap(~Day)
-
-
 
 
 plot_data_column = function (data, column) {
@@ -187,7 +140,7 @@ myplots <- lapply(colnames(data2), plot_data_column, data = data2)
   
 
 
-## final plots
+#### final plots
 gpcd14 <- ggplot(dt_STA_d1d4_pchange, aes(x=Stim_Amplitude, y=Percent_Change_AUC, color=Group)) +
   geom_smooth(span=0.25) +
   geom_point(alpha=0.4) +
@@ -216,8 +169,6 @@ AUC_d1234
 
 
 #### to do?
-# remove samples <50 to get rid of stim artifact
-# the number of samples removed should actually be based on sampling frequency
 # multiplier for recordings (different gains for different days??)
 
 
