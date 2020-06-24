@@ -19,7 +19,8 @@ To use:
 
 
 
-# import libraries
+
+#### import libraries
 import numpy as np
 from scipy import signal
 import pandas as pd
@@ -29,7 +30,8 @@ from datetime import datetime
 
 
 
-# define functions
+
+#### define functions
 def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 ):
     '''Takes .mat file containing MEP data and returns a dataframe of that data'''
@@ -62,7 +64,7 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     # lEMG = lEMG[0][0].flatten()
      
     # find location of stimulation pulses (sample number)
-    # VERIFY THIS SECTION!!!!!!!
+    #!!!!!!! VERIFY THIS SECTION
     stim_peaks = signal.find_peaks(stim, height=0.09, distance=6)
     peak_locs = stim_peaks[0]
     peak_heights = stim_peaks[1]['peak_heights']
@@ -130,12 +132,7 @@ def round_to_5(number):
 
 
 
-
-
-
-
-
-# do processing on files
+#### do processing
 startTime = datetime.now()
 
 # specify locations and files and make empty dataframe
@@ -152,12 +149,7 @@ endTime = datetime.now()
 totalTime = endTime - startTime
 print('Total time: ', totalTime)
 
-
-
-# create STA dataframe from rectified MEP dataframe
-# !!!!!!!!!!!!you need to check this 
-# maybe dont rectify... you can do that in R, but would be nice to see actual STA plotted
-df_MEP['EMG_Amplitude'] = df_MEP['EMG_Amplitude'].abs()
+# create STA dataframe
 df_STA = df_MEP.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
 df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
@@ -168,39 +160,18 @@ df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = Fal
 
 
 
+# convert from sample to time!!!!!!!!!!
 
 
-# you probably need to convert from sample to time
-    # smoothing with bin of samples would result in different smoothing between groups
-
+    
+#### questions ####
+# do you average evoked potentials to make STAs first?
+# or do you smooth (moving average), rectify, etc?
+# moving average window latencies
 # split functions so they each do 1 thing
 
-# should this whole analysis script be a class or something... something that you call?
 
-# you need to make an informed choice of moving average window size
-    # look at rat SCI MEP latencies
-
-
-
-# ----------------------testing-----------------------
-
-
-
-
-# # do processing on files
-# startTime = datetime.now()
-
-# rootdir = 'C:/Users/iangm/Google Drive/UF/Lab/Data & Figures/Python Scripts/MEPs_to_analyze/'
-# cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
-# df_test_MEP = pd.DataFrame(columns=cols)
-
-# for f in list_files(rootdir):
-#     df_test_MEP = df_test_MEP.append(file_to_df(rootdir, f, df_test_MEP, cols))
-#     print('Another file done.')
-
-# endTime = datetime.now()
-# totalTime = endTime - startTime
-# print('Total time: ', totalTime)
-
+#### scrap ####
+# df_MEP['EMG_Amplitude'] = df_MEP['EMG_Amplitude'].abs()
 
 

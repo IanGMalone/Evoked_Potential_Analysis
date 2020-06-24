@@ -10,7 +10,7 @@
 # This is a work in progress.
 #
 
-
+######### !! June 23, 2020 - df_STA will not be rectified now (change this script to rectify for AUC)
 
 
 #### import libraries
@@ -157,13 +157,11 @@ dots
 
 
 
-animals = c('N01')
-
-staplot <- ggplot(subset(dt_STA_d1d4, Animal %in% animals & Day %in% c(1,4) & Stim_Amplitude %in% c(100, 400)),
+animals = c('N26')
+ggplot(subset(dt_STA_d1d4, Animal %in% animals & Day %in% c(1,4) & Stim_Amplitude %in% c(100, 400)),
                   aes(x=Sample, y=STA_Amplitude, color=factor(Stim_Amplitude))) +
   geom_point(alpha=0.4) +
   facet_wrap(~Day)
-staplot
 
 
 
