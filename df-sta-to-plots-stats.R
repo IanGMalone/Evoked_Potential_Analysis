@@ -16,7 +16,6 @@
 
 #### ---- importing libraries and defining functions ---- ####
 
-
 #### import libraries
 library(ggplot2)
 library(ggthemes)
@@ -24,13 +23,11 @@ library(data.table)
 library(pracma) # trapz function
 library(viridis)  
 
-
 #### define functions
 percent_change <- function(old_val, new_val) {
   #' Return percent change between new and old value
   ((new_val-old_val)/old_val)*100
 }
-
 
 st_er <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
 
@@ -39,31 +36,25 @@ st_er <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
 
 #### ---- data wrangling and analysis ---- ####
 
-
 #### load STA data as dataframe
 df <- data.frame(read.csv('C:/Users/iangm/Desktop/df_STA_2020_06_14_clean.csv'))
 df[,'Animal'] = toupper(df[,'Animal'])
 dt_STA = data.table(df)
-
 
 #### make data table for day 1, 2, 3, 4
 #### remove stim artifact (samples 0:50) <---- maybe remove less than 50 (50 samples = 2.5ms)
 #### only keep left side EMG in data table
 dt_STA = subset(dt_STA, Day %in% c(1, 2, 3, 4) & Sample %in% c(50:300) & Side %in% c('Left'))
 
-
 #### calculate AUC, dropping the Sample and STA_Amplitude columns
 dt_STA = dt_STA[, .(AUC = trapz(Sample, STA_Amplitude)), by = .(Animal, Day, Side, Stim_Amplitude)]
-
 
 #### break Day column into columns for day 1 AUC and day 4 AUC
 dt_STA = dcast(dt_STA, Animal + Side + Stim_Amplitude ~ Day, value.var = "AUC")
 
-
 #### new dt made to use 100 uA as baseline (continued below after dt_STA_day1_baseline processing)
 keeps <- c(100,200,300,370,400,500)
 dt_STA_100_baseline = subset(dt_STA, Stim_Amplitude %in% keeps)
-
 
 #### new dt made to use day 1 as baseline
 dt_STA_day1_baseline = dt_STA
@@ -74,13 +65,11 @@ names(dt_STA_day1_baseline)[names(dt_STA_day1_baseline) == "2"] = "AUC_2"
 names(dt_STA_day1_baseline)[names(dt_STA_day1_baseline) == "3"] = "AUC_3"
 names(dt_STA_day1_baseline)[names(dt_STA_day1_baseline) == "4"] = "AUC_4"
 
-
 #### calculate percent change from day 1 for each day, make new columns
 dt_STA_day1_baseline[, PercentChange_1 := percent_change(AUC_1, AUC_1)]
 dt_STA_day1_baseline[, PercentChange_2 := percent_change(AUC_1, AUC_2)]
 dt_STA_day1_baseline[, PercentChange_3 := percent_change(AUC_1, AUC_3)]
 dt_STA_day1_baseline[, PercentChange_4 := percent_change(AUC_1, AUC_4)]
-
 
 #### define animal groups
 injstim = c("N09", "N10", "N11", "N13")
@@ -92,7 +81,6 @@ noinjnostim = c("N17", "N19", "N20", "N24", "N25", "N26")
 # injnoemgnostim = c("EZ01", "EZ02")
 # noinjnoemgnostim = c("EZ03", "EZ04")
 
-
 #### add animal group column
 dt_STA_day1_baseline[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
 dt_STA_day1_baseline[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
@@ -103,7 +91,6 @@ dt_STA_day1_baseline[Animal %in% noinjnostim, Group := "No Injury + No Stimulati
 # dt_STA[Animal %in% injnoemgnostim, Group := "Injury + No EMG + No Stimulation"]
 # dt_STA[Animal %in% noinjnoemgnostim, Group := "No Injury + No EMG + No Stimulation"]
 
-
 #### melt
 dt_STA_day1_baseline = melt(dt_STA_day1_baseline, id = c("Animal", "Side", "Stim_Amplitude", "Group"))
 dt_STA_day1_baseline[, c("Measure", "Day") := tstrsplit(variable, "_", fixed = TRUE)]
@@ -112,22 +99,16 @@ dt_STA_day1_baseline = dcast(dt_STA_day1_baseline, Animal + Side + Stim_Amplitud
 setnames(dt_STA_day1_baseline, "PercentChange", "Percent_Change")
 setcolorder(dt_STA_day1_baseline, c("Animal", "Side", "Stim_Amplitude", "Day", "AUC", "Percent_Change", "Group"))
 
-
 #### save dt to a .csv
 #write.csv(dt_STA, 'C:\\Users\\iangm\\desktop\\dt_STA.csv')
-
-
-
 
 #### continue with processing other dt for 100 uA baseline
 dt_STA_100_baseline = melt(dt_STA_100_baseline, id = c("Animal", "Side", "Stim_Amplitude"))
 dt_STA_100_baseline = dcast(dt_STA_100_baseline, Animal + Side + variable ~ Stim_Amplitude, value.var = "value")
 
-
 #### rename columns
 setnames(dt_STA_100_baseline, as.character(keeps), paste0('s', keeps))
 setnames(dt_STA_100_baseline, c('variable'), c('Day'))
-
 
 #### calculate percent change from 100 uA to other stim amps
 dt_STA_100_baseline[, pc100 := percent_change(s100, s100)]
@@ -140,13 +121,11 @@ dt_STA_100_baseline[, pc500 := percent_change(s100, s500)]
 #### drop old columns
 dt_STA_100_baseline[, paste0('s', keeps):=NULL]  # remove two columns
 
-
 #### add animal group column
 dt_STA_100_baseline[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
 dt_STA_100_baseline[Animal %in% injnostim, Group := "Injury + No Stimulation, n=6"]
 dt_STA_100_baseline[Animal %in% noinjstim, Group := "No Injury + Stimulation, n=3"]
 dt_STA_100_baseline[Animal %in% noinjnostim, Group := "No Injury + No Stimulation, n=6"]
-
 
 ####  dt for mean and se for stim amp of interest
 dt_mean_se = dt_STA_100_baseline[, 
@@ -160,14 +139,16 @@ dt_points = dt_STA_100_baseline[, c('pc100','pc200','pc300','pc370','pc500'):=NU
 
 
 
-#### ---- plotting ---- ####
+
+#### ---- plotting ----#### ---- 
 ordered = c("Injury + Stimulation, n=4",
             "Injury + No Stimulation, n=6",
             "No Injury + Stimulation, n=3",
             "No Injury + No Stimulation, n=6")
 
 
-ggplot(dt_mean_se, aes(x=factor(Group, levels=ordered), y=pc400_mean, fill=Day)) + 
+#### % change 100 to 400 vs. groups by day
+bar_and_points <- ggplot(dt_mean_se, aes(x=factor(Group, levels=ordered), y=pc400_mean, fill=Day)) + 
   geom_bar(position=position_dodge(), stat="identity", colour='black') +
   geom_errorbar(aes(ymin=pc400_mean-pc400_se, ymax=pc400_mean+pc400_se), width=.2,position=position_dodge(.9)) +
   geom_point(data=dt_points, aes(x=factor(Group, levels=ordered), y=pc400, Fill=Day), 
@@ -177,47 +158,26 @@ ggplot(dt_mean_se, aes(x=factor(Group, levels=ordered), y=pc400_mean, fill=Day))
        y="Percent Change AUC (100 µA to 400 µA)") +
   theme_classic() +
   theme(text = element_text(size=17)) +
-  scale_fill_viridis(discrete = TRUE, direction = -1)
+  scale_fill_viridis(discrete = TRUE, direction = -1) +
+  theme(legend.position=c(0.05,0.91))
+bar_and_points
 
 
-#### in progress plots
-#WHERE IS N11 ?????????
-dots <- ggplot(subset(dt_STA_d1d4_pchange, Animal %in% c('N09', 'N10', 'N11', 'N13')), aes(x=Stim_Amplitude, y=Percent_Change_AUC, color=Animal)) +
-  geom_point(alpha=0.7)
-dots
-
-
-animals = c('N26')
-ggplot(subset(dt_STA_d1d4, Animal %in% animals & Day %in% c(1,4) & Stim_Amplitude %in% c(100, 400)),
-                  aes(x=Sample, y=STA_Amplitude, color=factor(Stim_Amplitude))) +
-  geom_point(alpha=0.4) +
-  facet_wrap(~Day)
-
-
-plot_data_column = function (data, column) {
-  ggplot(data, aes_string(x = column)) +
-    geom_histogram(fill = "lightgreen") +
-    xlab(column)
-}
-
-myplots <- lapply(colnames(data2), plot_data_column, data = data2)
-
-
-  
-
-
-#### final plots
-gpcd14 <- ggplot(subset(dt_STA_day1_baseline, Day %in% c(1,4)), aes(x=Stim_Amplitude, y=Percent_Change_AUC, color=Group)) +
-  geom_smooth(span=0.25) +
-  geom_point(alpha=0.4) +
+#### % change d1 to d4 vs. stim amp by group
+smooth_and_points <- ggplot(subset(dt_STA_day1_baseline, Day %in% c(4)), 
+                            aes(x=Stim_Amplitude, y=Percent_Change, 
+                                color=factor(Group, levels=ordered))) +
+  geom_smooth(span=0.25, size=1.5) +
+  geom_point(alpha=0.5) +
   labs(x="Stimulation Amplitude (µA)", 
        y="Percent Change AUC \n Day 1 to Day 4") +
   xlim(100,500) +
   theme_classic() +
-  theme(text = element_text(size=20)) +
-  scale_color_viridis(discrete = TRUE, option = "D") +
-  scale_fill_viridis(discrete = TRUE)
-gpcd14
+  theme(text = element_text(size=17)) +
+  scale_color_viridis(option='magma', discrete = TRUE) +
+  theme(legend.position=c(0.18,0.9), legend.title.align = 0.3) +
+  labs(color = "Group")
+smooth_and_points
 
 
 Day.labs <- c("Day 1", "Day 2", "Day 3", "Day 4")
