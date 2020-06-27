@@ -145,6 +145,7 @@ ordered = c("Injury + Stimulation, n=4",
             "Injury + No Stimulation, n=6",
             "No Injury + Stimulation, n=3",
             "No Injury + No Stimulation, n=6")
+colors = c('#9A1F3F','#D9455F','#45D9BE','#1F9878' )
 
 
 #### % change 100 to 400 vs. groups by day
@@ -158,8 +159,9 @@ bar_and_points <- ggplot(dt_mean_se, aes(x=factor(Group, levels=ordered), y=pc40
        y="Percent Change AUC (100 µA to 400 µA)") +
   theme_classic() +
   theme(text = element_text(size=17)) +
-  scale_fill_viridis(discrete = TRUE, direction = -1) +
-  theme(legend.position=c(0.05,0.91))
+  scale_fill_manual(values = colors) +
+  theme(legend.position=c(0.05,0.91)) +
+  scale_y_continuous(expand=c(0.01,0), trans='log10')
 bar_and_points
 
 
@@ -174,10 +176,11 @@ smooth_and_points <- ggplot(subset(dt_STA_day1_baseline, Day %in% c(4)),
   xlim(100,500) +
   theme_classic() +
   theme(text = element_text(size=17)) +
-  scale_color_viridis(option='magma', discrete = TRUE) +
+  scale_color_manual(values = colors) +
   theme(legend.position=c(0.18,0.9), legend.title.align = 0.3) +
   labs(color = "Group")
 smooth_and_points
+
 
 
 Day.labs <- c("Day 1", "Day 2", "Day 3", "Day 4")
