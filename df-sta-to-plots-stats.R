@@ -33,7 +33,6 @@ st_er <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
 
 
 
-
 #### ---- data wrangling and analysis ---- ####
 
 #### load STA data as dataframe
