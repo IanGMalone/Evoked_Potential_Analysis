@@ -21,7 +21,7 @@ sns.set(style='ticks')
 
 
 path = 'C:/Users/iangm/Desktop/'
-file_name = 'n10_1_mep.mat'
+file_name = 'n16_4_mep.mat'
 
 
 # load file and extract keys
@@ -61,6 +61,16 @@ peak_heights = stim_peaks[1]['peak_heights']
 
 mep_time_ms = 12 
 mep_sample_length = round((mep_time_ms/1000)*samp_freq)
+
+
+
+
+
+
+
+
+
+
 # =============================================================================
 #     
 # sns.lineplot(x=time[0:500000], y=lEMG[0:500000])

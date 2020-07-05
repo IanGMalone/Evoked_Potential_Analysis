@@ -17,15 +17,17 @@
 #### ---- importing libraries and defining functions ---- ####
 
 #### import libraries
-library(ggplot2)
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
 library(ggthemes)
 library(data.table)
-library(pracma) # trapz function
-library(viridis)  
+library(pracma)
+
 
 #### define functions
 percent_change <- function(old_val, new_val) {
-  #' Return percent change between new and old value
+  #Return percent change between new and old value
   ((new_val-old_val)/old_val)*100
 }
 
@@ -118,7 +120,7 @@ dt_STA_100_baseline[, pc400 := percent_change(s100, s400)]
 dt_STA_100_baseline[, pc500 := percent_change(s100, s500)]
 
 #### drop old columns
-dt_STA_100_baseline[, paste0('s', keeps):=NULL]  # remove two columns
+dt_STA_100_baseline[, paste0('s', keeps):=NULL]
 
 #### add animal group column
 dt_STA_100_baseline[Animal %in% injstim, Group := "Injury + Stimulation, n=4"]
@@ -139,7 +141,41 @@ dt_points = dt_STA_100_baseline[, c('pc100','pc200','pc300','pc370','pc500'):=NU
 
 
 
+#### ---- stats and plots ---- ####
+
+#### data preparation
+dt_bars_stats = dt_STA_100_baseline
+dt_bars_stats[, "Side":=NULL]
+setnames(dt_bars_stats, "pc400", "PC_AUC_400")
+setcolorder(dt_bars_stats, c("Animal", "Group", "Day", "PC_AUC_400"))
+
+#### summary statistics, data grouped by Group (treatment) and day
+dt_bars_stats %>%
+  group_by(Group, Day) %>%
+  get_summary_stats(PC_AUC_400, type = "mean_sd")
+
+#### visualization
+
+
+#### check assumptions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #### ---- plotting ----#### ---- 
+
+#!!!! encompass this section in stats and plotting above!!!
+
 ordered = c("Injury + Stimulation, n=4",
             "Injury + No Stimulation, n=6",
             "No Injury + Stimulation, n=3",
@@ -147,34 +183,34 @@ ordered = c("Injury + Stimulation, n=4",
 colors = c('#9A1F3F','#D9455F','#45D9BE','#1F9878' )
 
 
-#### % change 100 to 400 vs. groups by day
+#### percent change 100 to 400 vs. groups by day
 bar_and_points <- ggplot(dt_mean_se, aes(x=factor(Group, levels=ordered), y=pc400_mean, fill=Day)) + 
   geom_bar(position=position_dodge(), stat="identity", colour='black') +
   geom_errorbar(aes(ymin=pc400_mean-pc400_se, ymax=pc400_mean+pc400_se), width=.2,position=position_dodge(.9)) +
   geom_point(data=dt_points, aes(x=factor(Group, levels=ordered), y=pc400, Fill=Day), 
              position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.9,), 
-             shape=21, alpha=0.5) +
+             shape=21, size=3.5, alpha=0.5) +
   labs(x="Group", 
        y="Percent Change AUC (100 µA to 400 µA)") +
   theme_classic() +
   theme(text = element_text(size=17)) +
   scale_fill_manual(values = colors) +
   theme(legend.position=c(0.05,0.91)) +
-  scale_y_continuous(expand=c(0.01,0), trans='log10')
+  scale_y_continuous(expand=c(0.01,0))
 bar_and_points
 
 
-#### % change d1 to d4 vs. stim amp by group
+#### percent change d1 to d4 vs. stim amp by group
 smooth_and_points <- ggplot(subset(dt_STA_day1_baseline, Day %in% c(4)), 
                             aes(x=Stim_Amplitude, y=Percent_Change, 
                                 color=factor(Group, levels=ordered))) +
-  geom_smooth(span=0.25, size=1.5) +
-  geom_point(alpha=0.5) +
+  geom_smooth(span=0.25, size=2) +
+  geom_point(alpha=0.5, size=3.5) +
   labs(x="Stimulation Amplitude (µA)", 
        y="Percent Change AUC \n Day 1 to Day 4") +
   xlim(100,500) +
   theme_classic() +
-  theme(text = element_text(size=17)) +
+  theme(text = element_text(size=25)) +
   scale_color_manual(values = colors) +
   theme(legend.position=c(0.18,0.9), legend.title.align = 0.3) +
   labs(color = "Group")
@@ -199,7 +235,7 @@ AUC_d1234
 
 
 #### to do?
-# multiplier for recordings (different gains for different days??)
+# multiplier for recordings (different gains for different days??) or just normalize
 
 
 
