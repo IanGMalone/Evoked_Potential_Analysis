@@ -210,7 +210,13 @@ def resample(smp, scale=1.0):
 
 
 
-
+#### to do
+# resample
+# threshold MEPs
+# cwt on MEP and compare
+# classify if animal will recover based on cwt characteristics (vocalization paper)
+# feed in all the CWT meps from all days and have human-labelled target variable
+# target: 1 = faciliated in the end, 0 = didnt
 
 
 

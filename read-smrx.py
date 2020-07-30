@@ -99,12 +99,18 @@ def impz(b,a=1):
     plt.title(r'Step response')
     plt.subplots_adjust(hspace=0.5)
     
-n = 61 # delay of 30 samples
+n = 11 # filter length
 fir_coeffs = signal.firwin(n, cutoff = (np.pi/5), window = "hamming")
 #Frequency and phase response
-mfreqz(fir_coeffs)
+#mfreqz(fir_coeffs)
 
-y_raw = rEMG[10000:11000]
-y_res = signal.upfirdn(fir_coeffs, y_raw, up=5, down=4, mode='smooth')
+y_raw = rEMG[10000:12000]
+y_res = signal.upfirdn(fir_coeffs, y_raw, up=5, down=4)
 
+#it's not right... some sort of aliasing is happening. goes away at lower cutoff freq
 
+plt.subplot(211)
+plt.stem(np.arange(len(y_raw)),y_raw)
+plt.subplot(212)
+plt.stem(np.arange(len(y_res)),y_res)
+plt.show()
