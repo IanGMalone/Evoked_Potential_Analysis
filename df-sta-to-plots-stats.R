@@ -220,22 +220,38 @@ smooth_and_points <- ggplot(day4pchange,
   geom_smooth(span=0.25, size=2) +
   geom_point(alpha=0.5, size=3.5) +
   labs(x="Stimulation Amplitude (µA)", 
-       y="Percent Change AUC \n Day 1 to Day 4") +
+       y="Percent Change AUC") +
   xlim(100,500) +
   theme_classic() +
   theme(text = element_text(size=25)) +
   scale_color_manual(values = colors) +
   theme(legend.position=c(0.18,0.9), legend.title.align = 0.3) +
   labs(color = "Group")
+
+# !!!! add somewhere that this is day 1 to day 4
+
 smooth_and_points
 
 
 #### percent change d1 to d4 vs. stim amp by group
-day4pchange_350_450 <- subset(day4pchange, Stim_Amplitude > 350 && Stim_Amplitude < 450)
+day4pchange_350_450 <- subset(day4pchange, Stim_Amplitude > 350 & Stim_Amplitude < 450)
+day4pchange_350_450[,c(5,6)] <- log(day4pchange_350_450[,c(5,6)])
+
+bp <- ggplot(day4pchange_350_450, aes(x=Group, y=Percent_Change, color=factor(Group, levels=ordered))) + 
+  geom_boxplot(outlier.shape=NA) +
+  theme_classic() +
+  theme(text = element_text(size=25)) +
+  scale_color_manual(values = colors) +
+  theme(legend.position=c(0.8,0.9), legend.title.align = 0.3) +
+  labs(color = "Group") +
+  geom_jitter(width=0.1, alpha=0.5, size=3.5) +
+  labs(x="Group", y="Log Percent Change AUC") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
+
+# !!!! add somewhere that this is day 1 to day 4 and between 350 and 450 uA
 
 
-
-
+bp
 
 
 
