@@ -236,26 +236,57 @@ smooth_and_points
 #### percent change d1 to d4 vs. stim amp by group
 day4pchange_350_450 <- subset(day4pchange, Stim_Amplitude > 350 & Stim_Amplitude < 450)
 day4pchange_350_450[,c(5,6)] <- log(day4pchange_350_450[,c(5,6)])
+dfstats <- day4pchange_350_450[,c(6,7)]
+dfstats <- na.omit(dfstats)
+dfstats <- dfstats[-c(57),]
 
 bp <- ggplot(day4pchange_350_450, aes(x=Group, y=Percent_Change, color=factor(Group, levels=ordered))) + 
   geom_boxplot(outlier.shape=NA) +
   theme_classic() +
   theme(text = element_text(size=25)) +
   scale_color_manual(values = colors) +
-  theme(legend.position=c(0.8,0.9), legend.title.align = 0.3) +
+  theme(legend.position='none') +
   labs(color = "Group") +
   geom_jitter(width=0.1, alpha=0.5, size=3.5) +
   labs(x="Group", y="Log Percent Change AUC") +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
 
 # !!!! add somewhere that this is day 1 to day 4 and between 350 and 450 uA
-
+## change order of groups on x axis??
 
 bp
 
 
+#### stats
+# kruskal wallis bc no assumptions of independence of observations,
+#homogeneity of variance, normality of data
+
+fit <- aov(Percent_Change ~ Group, data = day4pchange_350_450)
+layout(matrix(c(1,2,3,4),2,2)) # optional layout
+plot(fit) # diagnostic plots
+summary(fit) # display Type I ANOVA table
 
 
+kruskal.test(Percent_Change ~ Group, data = dfstats)   #### GOOD SIGNIFICANCE
+
+pairwise.wilcox.test(dfstats$Percent_Change, dfstats$Group,
+                     p.adjust.method = "bonferroni")   ### 2/3 SIG
+
+
+aov(Percent_Change ~ Group, data = dfstats)  ###DOESNT WORK
+
+
+fit <- aov(Percent_Change ~ Group, data = dfstats)
+#layout(matrix(c(1,2,3,4),2,2)) # optional layout
+#plot(fit) # diagnostic plots
+summary(fit) # display Type I ANOVA table
+
+
+
+
+pairwise.t.test(dfstats$Percent_Change, dfstats$Group, p.adj = "bonferroni")  # 3/3 SIG
+
+## other plot below
 
 
 Day.labs <- c("Day 1", "Day 2", "Day 3", "Day 4")
