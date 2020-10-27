@@ -217,7 +217,7 @@ day4pchange <- subset(dt_STA_day1_baseline, Day %in% c(4))
 smooth_and_points <- ggplot(day4pchange, 
                             aes(x=Stim_Amplitude, y=Percent_Change, 
                                 color=factor(Group, levels=ordered))) +
-  geom_smooth(span=0.25, size=2) +
+  geom_smooth(span=0.25, size=2, se=FALSE) +
   geom_point(alpha=0.5, size=3.5) +
   labs(x="Stimulation Amplitude (µA)", 
        y="Percent Change AUC") +
@@ -240,14 +240,14 @@ dfstats <- day4pchange_350_450[,c(6,7)]
 dfstats <- na.omit(dfstats)
 dfstats <- dfstats[-c(57),]
 
-bp <- ggplot(day4pchange_350_450, aes(x=Group, y=Percent_Change, color=factor(Group, levels=ordered))) + 
+bp <- ggplot(day4pchange_350_450, aes(x=Group, y=Percent_Change)) + 
   geom_boxplot(outlier.shape=NA) +
   theme_classic() +
   theme(text = element_text(size=25)) +
   scale_color_manual(values = colors) +
   theme(legend.position='none') +
   labs(color = "Group") +
-  geom_jitter(width=0.1, alpha=0.5, size=3.5) +
+  geom_jitter(color=Animal,width=0.1, alpha=0.5, size=3.5) +
   labs(x="Group", y="Log Percent Change AUC") +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 20))
 
@@ -261,27 +261,17 @@ bp
 # kruskal wallis bc no assumptions of independence of observations,
 #homogeneity of variance, normality of data
 
-fit <- aov(Percent_Change ~ Group, data = day4pchange_350_450)
-layout(matrix(c(1,2,3,4),2,2)) # optional layout
-plot(fit) # diagnostic plots
-summary(fit) # display Type I ANOVA table
 
+#kruskal.test(Percent_Change ~ Group, data = dfstats)   #### GOOD SIGNIFICANCE
 
-kruskal.test(Percent_Change ~ Group, data = dfstats)   #### GOOD SIGNIFICANCE
-
-pairwise.wilcox.test(dfstats$Percent_Change, dfstats$Group,
-                     p.adjust.method = "bonferroni")   ### 2/3 SIG
-
-
-aov(Percent_Change ~ Group, data = dfstats)  ###DOESNT WORK
+#pairwise.wilcox.test(dfstats$Percent_Change, dfstats$Group,
+#                     p.adjust.method = "bonferroni")   ### 2/3 SIG
 
 
 fit <- aov(Percent_Change ~ Group, data = dfstats)
 #layout(matrix(c(1,2,3,4),2,2)) # optional layout
 #plot(fit) # diagnostic plots
 summary(fit) # display Type I ANOVA table
-
-
 
 
 pairwise.t.test(dfstats$Percent_Change, dfstats$Group, p.adj = "bonferroni")  # 3/3 SIG
