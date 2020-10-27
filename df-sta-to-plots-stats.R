@@ -14,18 +14,18 @@
 
 
 
-#### ---- importing libraries and defining functions ---- ####
 
-#### import libraries
+
+#### import libraries ####
 library(tidyverse)
 library(ggpubr)
 library(rstatix)
 library(ggthemes)
 library(data.table)
 library(pracma)
+library(ggplot2)
 
-
-#### define functions
+#### define functions ####
 percent_change <- function(old_val, new_val) {
   #Return percent change between new and old value
   ((new_val-old_val)/old_val)*100
@@ -35,7 +35,7 @@ st_er <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
 
 
 
-#### ---- data wrangling and analysis ---- ####
+#### data wrangling and analysis ####
 
 #### load STA data as dataframe
 df <- data.frame(read.csv('C:/Users/iangm/Desktop/df_STA_2020_06_14_clean.csv'))
@@ -141,7 +141,7 @@ dt_points = dt_STA_100_baseline[, c('pc100','pc200','pc300','pc370','pc500'):=NU
 
 
 
-#### ---- stats and plots ---- ####
+#### stats and plots ####
 
 #### data preparation
 dt_bars_stats = dt_STA_100_baseline
@@ -153,6 +153,10 @@ setcolorder(dt_bars_stats, c("Animal", "Group", "Day", "PC_AUC_400"))
 dt_bars_stats %>%
   group_by(Group, Day) %>%
   get_summary_stats(PC_AUC_400, type = "mean_sd")
+
+
+
+
 
 #### visualization
 
@@ -172,7 +176,7 @@ dt_bars_stats %>%
 
 
 
-#### ---- plotting ----#### ---- 
+#### plotting ####
 
 #!!!! encompass this section in stats and plotting above!!!
 
@@ -200,8 +204,17 @@ bar_and_points <- ggplot(dt_mean_se, aes(x=factor(Group, levels=ordered), y=pc40
 bar_and_points
 
 
+
+#### exploratory plot matrix
+pm <- ggpairs(subset(dt_STA_day1_baseline, Day %in% c(4)), mapping = aes(color = Group), columns = c("Stim_Amplitude", "Percent_Change"))
+pm
+
+
+
 #### percent change d1 to d4 vs. stim amp by group
-smooth_and_points <- ggplot(subset(dt_STA_day1_baseline, Day %in% c(4)), 
+day4pchange <- subset(dt_STA_day1_baseline, Day %in% c(4))
+
+smooth_and_points <- ggplot(day4pchange, 
                             aes(x=Stim_Amplitude, y=Percent_Change, 
                                 color=factor(Group, levels=ordered))) +
   geom_smooth(span=0.25, size=2) +
@@ -215,6 +228,17 @@ smooth_and_points <- ggplot(subset(dt_STA_day1_baseline, Day %in% c(4)),
   theme(legend.position=c(0.18,0.9), legend.title.align = 0.3) +
   labs(color = "Group")
 smooth_and_points
+
+
+#### percent change d1 to d4 vs. stim amp by group
+day4pchange_350_450 <- subset(day4pchange, Stim_Amplitude > 350 && Stim_Amplitude < 450)
+
+
+
+
+
+
+
 
 
 
@@ -236,7 +260,7 @@ AUC_d1234
 
 #### to do?
 # multiplier for recordings (different gains for different days??) or just normalize
-
+# probably just normalize
 
 
 
