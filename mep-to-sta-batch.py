@@ -27,13 +27,13 @@ import pandas as pd
 import h5py
 import os
 from datetime import datetime
+import time
 
-
+#################you should probably downsample these files before saving them as MEP
 
 #!!!! change sample to time?
 #### define functions
-def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
-):
+def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Takes .mat file containing MEP data and returns a dataframe of that data'''
 
     # load file and extract keys
@@ -51,8 +51,8 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     stim_wave = [key for var in stim_vars for key in all_keys if var in key][0]
 
     # unpack variables from .mat file
-    animal = file_name.split('_')[0]
-    day = file_name.split('_')[1]
+    animal = file_name.split('_')[3]
+    day = file_name.split('_')[4].split('.')[0]
     stim = raw_data[stim_wave]['values'][0]
     samp_freq = int(round(1/(raw_data[stim_wave]['interval'][0][0])))
     rEMG = raw_data[rightEMG]['values'][0]
@@ -73,8 +73,7 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
     df_mep = pd.DataFrame(columns=col_names)
     #!!!!! make ms an argument?
     # Animals <= N13 were sampled at 20 kHz, animals > N13 were at 25 kHz
-    early_list= ['n01','n04','n05','n09','n10','n11','n13']
-    mep_time_ms = 12 
+
     mep_sample_length = round((mep_time_ms/1000)*samp_freq)
 
     for i in np.arange(len(peak_locs)):
@@ -82,7 +81,7 @@ def file_to_df(path, file_name, df, col_names=['Animal', 'Day', 'Side', 'Stim_Am
         df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
     
     # 400 uA is 4.0 for animals <= N13, 0.4 for animals > N1
-    if animal in early_list:
+    if animal in low_amp_list:
         df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*100)
     else:
         df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*1000)
@@ -135,13 +134,15 @@ def round_to_5(number):
 startTime = datetime.now()
 
 # specify locations and files and make empty dataframe
-rootdir = 'C:/Users/iangm/Desktop/MEPmat_py_analyze/'
+rootdir = 'C:\\Users\\iangm\\Desktop\\nov_analysis\\'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
+low_amp_list = []
+mep_time_ms = 30
 
 # append dataframes for all files to make one big dataframe
 for f in list_files(rootdir):
-    df_MEP = df_MEP.append(file_to_df(rootdir, f, df_MEP, cols))
+    df_MEP = df_MEP.append(file_to_df(rootdir, f, df_MEP, low_amp_list, mep_time_ms, cols))
 
 # measure how long the big dataframe creation took to execute
 endTime = datetime.now()
@@ -149,14 +150,15 @@ totalTime = endTime - startTime
 print('Total time: ', totalTime)
 
 # create STA dataframe
-df_STA = df_MEP.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
+df_STA = df_MEP
+df_STA['EMG_Amplitude'] = df_STA['EMG_Amplitude'].abs()
+df_STA = df_STA.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
 df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
 # save dataframes to CSV files
-df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
-df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
-
-
+date_str = time.strftime("%Y_%m_%d")
+df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_' + date_str + '.csv', index = False)
+df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_' + date_str + '.csv', index = False)
 
 
 

@@ -39,8 +39,11 @@ st_er <- function(x) sd(x, na.rm=TRUE)/sqrt(length(x))
 
 #### load STA data as dataframe
 df <- data.frame(read.csv('C:/Users/iangm/Desktop/df_STA_2020_06_14_clean.csv'))
+df['STA_Amplitude'] = abs(df['STA_Amplitude'])
+
 df[,'Animal'] = toupper(df[,'Animal'])
 dt_STA = data.table(df)
+
 
 #### make data table for day 1, 2, 3, 4
 #### remove stim artifact (samples 0:50) <---- maybe remove less than 50 (50 samples = 2.5ms)
@@ -299,5 +302,26 @@ AUC_d1234
 # multiplier for recordings (different gains for different days??) or just normalize
 # probably just normalize
 
+
+smooth_and_points <- ggplot(day4pchange, 
+                            aes(x=Stim_Amplitude, y=Percent_Change, 
+                                color=factor(Group, levels=ordered))) +
+  geom_smooth(span=0.25, size=2, se=FALSE) +
+  geom_point(alpha=0.5, size=3.5) +
+  labs(x="Stimulation Amplitude (µA)", 
+       y="Percent Change AUC") +
+  xlim(100,500) +
+  theme_classic() +
+  theme(text = element_text(size=25)) +
+  scale_color_manual(values = colors) +
+  theme(legend.position=c(0.18,0.9), legend.title.align = 0.3) +
+  labs(color = "Group")
+
+names(dt_STA)[2] <- "Trash"
+names(dt_STA)[3] <- "Traash"
+
+
+names(dt_STA)[4] <- "Stim_Amplitude"
+ggplot(dt_STA, aes(x=Stim_Amplitude, y=AUC)) + geom_point()
 
 

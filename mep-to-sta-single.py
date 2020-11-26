@@ -9,6 +9,8 @@ The purpose of this script is to create a dataframe from a single Spike2 .mat HD
 """
 
 
+####REWORKING THIS SCRIPT... COPY CHANGES FROM THE BATCH SCRIPT
+
 
 # import libraries
 import numpy as np
@@ -20,13 +22,12 @@ from datetime import datetime
 
 
 # define functions
-def file_to_df(path, file_name, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
-):
+def file_to_df(path, file_name, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude'], animal_list):
     '''Input .mat file containing MEP data and return a dataframe'''
 
     # load file and extract keys
     filepath = path + file_name
-    raw_data = h5py.File(filepath)
+    raw_data = h5py.File(filepath, 'r')
     all_keys = list(raw_data.keys())
     
     # define variables of interest
@@ -58,18 +59,14 @@ def file_to_df(path, file_name, col_names=['Animal', 'Day', 'Side', 'Stim_Amplit
     
     # get chunks of meps and make dataframe
     df_mep = pd.DataFrame(columns=col_names)
-    mep_time_ms = 12
+    mep_time_ms = 30
     mep_sample_length = round((mep_time_ms/1000)*samp_freq)
 
     for i in np.arange(len(peak_locs)):
         df_mep = df_mep.append(mep_to_df(animal, day, 'Left', peak_heights[i], lEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
         df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
-    
-    
-    early_list= ['n01', 'n02', 'n03', 'n04', 'n05', 'n06', 'n07', 'n08',\
-             'n09', 'n10', 'n11', 'n12', 'n13']
 
-    if animal in early_list:
+    if animal in animal_list:
         df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*100)
     else:
         df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*1000)
@@ -123,18 +120,20 @@ def mep_to_sta(df_mep):
 # do processing on files
 startTime = datetime.now()
 
-filename = 'n10_1_mep.mat'
+filename = 's01_1_mep.mat'
 
-rootdir = 'C:/Users/iangm/Desktop/'
+rootdir = 'C:\\Users\\iangm\\Desktop\\quick_analysis\\'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
-df_MEP = file_to_df(rootdir, filename, cols)
+animal_list= ['n01', 'n02', 'n03', 'n04', 'n05', 'n06', 'n07', 'n08',\
+             'n09', 'n10', 'n11', 'n12', 'n13']
+df_MEP = file_to_df(rootdir, filename, cols, animal_list)
 
 endTime = datetime.now()
 totalTime = endTime - startTime
 print('Total time: ', totalTime)
 
-#df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_2020_06_14_clean.csv', index = False)
-#df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_2020_06_14_clean.csv', index = False)
+df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP.csv', index = False)
+df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA.csv', index = False)
 
 
 
