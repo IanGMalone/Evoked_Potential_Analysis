@@ -40,21 +40,27 @@ stim_downsamp = signal.decimate(stim, int(samp_freq/5000))
 rEMG_downsamp = signal.decimate(rEMG, int(samp_freq/5000))
 lEMG_downsamp = signal.decimate(lEMG, int(samp_freq/5000))
 
-
+plt.subplot(2,1,1)
+plt.plot(stim)
+plt.subplot(2,1,2)
+plt.plot(stim_downsamp)
 
 plt.subplot(2,3,1)
 plt.plot(rEMG[0:500])
 plt.subplot(2,3,2)
-plt.magnitude_spectrum(rEMG)
+plt.magnitude_spectrum(rEMG,25000)
+plt.xlim([0,2500])
 plt.subplot(2,3,3)
-plt.phase_spectrum(rEMG)
+plt.phase_spectrum(rEMG,25000)
+plt.xlim([0,2500])
 plt.subplot(2,3,4)
 plt.plot(rEMG_downsamp[0:100])
 plt.subplot(2,3,5)
-plt.magnitude_spectrum(rEMG_downsamp)
+plt.magnitude_spectrum(rEMG_downsamp,5000)
 plt.subplot(2,3,6)
-plt.phase_spectrum(rEMG_downsamp)
+plt.phase_spectrum(rEMG_downsamp,5000)
 
+# the above plots look good. downsampling seems to work
 
 # desired_freq = 2000
 # secs = len(stim)/samp_freq # Number of seconds in signal X

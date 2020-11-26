@@ -57,6 +57,7 @@ def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Anima
     samp_freq = int(round(1/(raw_data[stim_wave]['interval'][0][0])))
     rEMG = raw_data[rightEMG]['values'][0]
     lEMG = raw_data[leftEMG]['values'][0]
+    
     # # below is for non-hd5 files
     # stim = stim[0][0].flatten()
     # samp_freq = 1/float(samp_freq[0][0].flatten())
@@ -77,8 +78,8 @@ def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Anima
     mep_sample_length = round((mep_time_ms/1000)*samp_freq)
 
     for i in np.arange(len(peak_locs)):
-        df_mep = df_mep.append(mep_to_df(animal, day, 'Left', peak_heights[i], lEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
-        df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], col_names), ignore_index=True)
+        df_mep = df_mep.append(mep_to_df(animal, day, 'Left', peak_heights[i], lEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
+        df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
     
     # 400 uA is 4.0 for animals <= N13, 0.4 for animals > N1
     if animal in low_amp_list:
@@ -104,16 +105,17 @@ def list_files(rootdir, extension='.mat'):
 
 
 
-def mep_to_df(animal, day, side, amp, mep, colnames=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
+def mep_to_df(animal, day, side, amp, mep, samp_freq, colnames=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Make data frame given various MEP information'''
     
-    animal_array = np.repeat(animal, len(mep))
-    day_array = np.repeat(day, len(mep))
-    side_array = np.repeat(side, len(mep))
-    amp_array = np.repeat(amp, len(mep))
-    samples = np.arange(len(mep))
+    mep_downsamp = signal.decimate(mep, int(samp_freq/5000))
+    animal_array = np.repeat(animal, len(mep_downsamp))
+    day_array = np.repeat(day, len(mep_downsamp))
+    side_array = np.repeat(side, len(mep_downsamp))
+    amp_array = np.repeat(amp, len(mep_downsamp))
+    samples = np.arange(len(mep_downsamp))
     
-    d = {colnames[0]:animal_array, colnames[1]:day_array, colnames[2]:side_array, colnames[3]:amp_array, colnames[4]:samples, colnames[5]:mep}
+    d = {colnames[0]:animal_array, colnames[1]:day_array, colnames[2]:side_array, colnames[3]:amp_array, colnames[4]:samples, colnames[5]:mep_downsamp}
     df = pd.DataFrame(d, columns=colnames)
     
     return df
@@ -162,47 +164,6 @@ df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_' + date_str + '.csv', index = Fal
 
 
 
-
-
-#### will this work? we need a lowpass anti aliasing filter
-#lowpass at 12500 and at 10000 (maybe go even lower to like 8000)
-#do an fft to see what frequencies are in the signal
-#upsample then downsample so you get downsampling of non integer ration (1.25)
-
-
-def resample(smp, scale=1.0):
-    """Resample a sound to be a different length
-    Sample must be mono.  May take some time for longer sounds
-    sampled at 44100 Hz.
-
-    Keyword arguments:
-    scale - scale factor for length of sound (2.0 means double length)
-    """
-    # f*ing cool, numpy can do this with one command
-    # calculate new length of sample
-    n = round(len(smp) * scale)
-    # use linear interpolation
-    # endpoint keyword means than linspace doesn't go all the way to 1.0
-    # If it did, there are some off-by-one errors
-    # e.g. scale=2.0, [1,2,3] should go to [1,1.5,2,2.5,3,3]
-    # but with endpoint=True, we get [1,1.4,1.8,2.2,2.6,3]
-    # Both are OK, but since resampling will often involve
-    # exact ratios (i.e. for 44100 to 22050 or vice versa)
-    # using endpoint=False gets less noise in the resampled sound
-    return np.interp(
-        np.linspace(0.0, 1.0, n, endpoint=False), # where to interpret
-        np.linspace(0.0, 1.0, len(smp), endpoint=False), # known positions
-        smp, # known data points
-        )
-
-'test commit with no stage'
-
-
-
-
-
-
-    
 #### questions ####
 #!!!! important
 # do you average evoked potentials to make STAs first?
