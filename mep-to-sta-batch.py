@@ -108,6 +108,7 @@ def list_files(rootdir, extension='.mat'):
 def mep_to_df(animal, day, side, amp, mep, samp_freq, colnames=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Make data frame given various MEP information'''
     
+    #the line below downsamples files to 5 kHz sampling frequency
     mep_downsamp = signal.decimate(mep, int(samp_freq/5000))
     animal_array = np.repeat(animal, len(mep_downsamp))
     day_array = np.repeat(day, len(mep_downsamp))
