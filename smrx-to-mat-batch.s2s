@@ -2,7 +2,7 @@
 
 const mask$ := "*.smrx";                     ' Change the mask to get a subset of smr files by name
 
-var savefolder$ := "D:\\Raw Data\\Working MEP Data\\Clean MEPsmr - EricaVerified\\";
+var savefolder$ := "D:\\MEP_MAT\\";
 var saveext$ := ".mat";
 
 var files$[200];		                    ' Array to hold up to 200 files

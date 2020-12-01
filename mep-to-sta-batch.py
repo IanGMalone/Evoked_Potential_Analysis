@@ -137,7 +137,7 @@ def round_to_5(number):
 startTime = datetime.now()
 
 # specify locations and files and make empty dataframe
-rootdir = 'C:\\Users\\iangm\\Desktop\\nov_analysis\\'
+rootdir = 'E:\\MEP_MAT\\'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
 low_amp_list = []
@@ -160,8 +160,8 @@ df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
 # save dataframes to CSV files
 date_str = time.strftime("%Y_%m_%d")
-df_MEP.to_csv(r'C:\Users\iangm\Desktop\df_MEP_' + date_str + '.csv', index = False)
-df_STA.to_csv(r'C:\Users\iangm\Desktop\df_STA_' + date_str + '.csv', index = False)
+df_MEP.to_csv(r'D:\Data_And_Analysis\\df_MEP_' + date_str + '.csv', index = False)
+df_STA.to_csv(r'D:\\Data_And_Analysis\\df_STA_' + date_str + '.csv', index = False)
 
 
 
