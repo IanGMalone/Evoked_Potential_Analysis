@@ -137,7 +137,7 @@ def round_to_5(number):
 startTime = datetime.now()
 
 # specify locations and files and make empty dataframe
-rootdir = 'E:\\MEP_MAT_NEIL\\'
+rootdir = 'D:\\MEP_MAT\\'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
 low_amp_list = []
@@ -166,7 +166,7 @@ df_STA.to_csv(r'D:\\Data\\df_STA_NEIL_' + date_str + '.csv', index = False)
 
 
 #### questions ####
-#!!!! important
+#!!! important
 # do you average evoked potentials to make STAs first?
 # or do you smooth (moving average), rectify, etc?
 # moving average window latencies
