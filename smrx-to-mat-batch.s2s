@@ -2,7 +2,7 @@
 
 const mask$ := "*.smrx";                     ' Change the mask to get a subset of smr files by name
 
-var savefolder$ := "D:\\MEP_MAT\\";
+var savefolder$ := "D:\\New_MAT_Neil\\";
 var saveext$ := ".mat";
 
 var files$[200];		                    ' Array to hold up to 200 files
