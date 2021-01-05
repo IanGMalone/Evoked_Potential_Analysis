@@ -110,12 +110,19 @@ def round_to_5(number):
     num_out = round(number/5)*5
     return num_out
 
-def find_day(filename):
+def find_day_postop(filename):
     '''Find day given filename (current structure of names)'''
-    if filename.split('_')[0] == '2020':
-        return filename.split('_')[4].split(".")[0]
+    if filename.split('_')[0] == '2020' or filename.split('_')[0] == '2021':
+        return filename.split('_')[4][1:]
     else:
-        return 'D0' + filename.split('_')[1]
+        return '0' + filename.split('_')[1]
+    
+def find_day_stim(filename):
+        '''Find day given filename (current structure of names)'''
+    if filename.split('_')[0] == '2020' or filename.split('_')[0] == '2021':
+        return filename.split('_')[4].split(".")[0][1:]
+    else:
+        return '0' + filename.split('_')[1]
         
 def find_animal(filename):
     '''Find animal given filename (current structure of names)'''
