@@ -120,9 +120,9 @@ def mep_to_sta(df_mep):
 # do processing on files
 startTime = datetime.now()
 
-filename = 's01_1_mep.mat'
+filename = '2020_11_19_N27_D02.smrx'
 
-rootdir = 'C:\\Users\\iangm\\Desktop\\quick_analysis\\'
+rootdir = 'E:\\MEP_MAT_NEIL\\'
 cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 animal_list= ['n01', 'n02', 'n03', 'n04', 'n05', 'n06', 'n07', 'n08',\
              'n09', 'n10', 'n11', 'n12', 'n13']

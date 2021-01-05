@@ -33,11 +33,11 @@ import time
 
 #!!!! change sample to time?
 #### define functions
-def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
+def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Takes .mat file containing MEP data and returns a dataframe of that data'''
     # load file and extract keys
     filepath = path + file_name
-    raw_data = h5py.File(filepath)
+    raw_data = h5py.File(filepath, 'r')
     all_keys = list(raw_data.keys())
     # define variables of interest
     leftEMG_vars = ['LDia', 'LDIA', 'lEMG_raw']
@@ -49,7 +49,8 @@ def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Anima
     stim_wave = [key for var in stim_vars for key in all_keys if var in key][0]
     # unpack variables from .mat file
     animal = find_animal(file_name)
-    day = find_day(file_name)
+    day_postop = find_day_postop(file_name)
+    day_stim = find_day_stim(file_name)
     stim = raw_data[stim_wave]['values'][0]
     samp_freq = int(round(1/(raw_data[stim_wave]['interval'][0][0])))
     rEMG = raw_data[rightEMG]['values'][0]
@@ -71,14 +72,14 @@ def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Anima
     mep_sample_length = round((mep_time_ms/1000)*samp_freq)
 
     for i in np.arange(len(peak_locs)):
-        df_mep = df_mep.append(mep_to_df(animal, day, 'Left', peak_heights[i], lEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
-        df_mep = df_mep.append(mep_to_df(animal, day, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
+        df_mep = df_mep.append(mep_to_df(animal, day_postop, day_stim, 'Left', peak_heights[i], lEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
+        df_mep = df_mep.append(mep_to_df(animal, day_postop, day_stim, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
     
     # 400 uA is 4.0 for animals <= N13, 0.4 for animals > N1
     if animal in low_amp_list:
-        df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*100)
+        df_mep[col_names[4]] = round_to_5(df_mep[col_names[4]]*100)
     else:
-        df_mep[col_names[3]] = round_to_5(df_mep[col_names[3]]*1000)
+        df_mep[col_names[4]] = round_to_5(df_mep[col_names[4]]*1000)
         
     return df_mep
     
@@ -92,16 +93,17 @@ def list_files(rootdir, extension='.mat'):
                 list_of_files.append(file)
     return list_of_files
 
-def mep_to_df(animal, day, side, amp, mep, samp_freq, colnames=['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
+def mep_to_df(animal, day_postop, day_stim, side, amp, mep, samp_freq, colnames=['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Make data frame given various MEP information'''
     #the line below downsamples files to 5 kHz sampling frequency
     mep_downsamp = signal.decimate(mep, int(samp_freq/5000))
     animal_array = np.repeat(animal, len(mep_downsamp))
-    day_array = np.repeat(day, len(mep_downsamp))
+    day_postop_array = np.repeat(day_postop, len(mep_downsamp))
+    day_stim_array = np.repeat(day_stim, len(mep_downsamp))
     side_array = np.repeat(side, len(mep_downsamp))
     amp_array = np.repeat(amp, len(mep_downsamp))
     samples = np.arange(len(mep_downsamp))
-    d = {colnames[0]:animal_array, colnames[1]:day_array, colnames[2]:side_array, colnames[3]:amp_array, colnames[4]:samples, colnames[5]:mep_downsamp}
+    d = {colnames[0]:animal_array, colnames[1]:day_postop_array, colnames[2]:day_stim_array, colnames[3]:side_array, colnames[4]:amp_array, colnames[5]:samples, colnames[6]:mep_downsamp}
     df = pd.DataFrame(d, columns=colnames)
     return df
 
@@ -111,25 +113,32 @@ def round_to_5(number):
     return num_out
 
 def find_day_postop(filename):
-    '''Find day given filename (current structure of names)'''
+    '''Find # days postop given filename (current structure of names)'''
     if filename.split('_')[0] == '2020' or filename.split('_')[0] == '2021':
         return filename.split('_')[4][1:]
     else:
-        return '0' + filename.split('_')[1]
+        return '999'
     
 def find_day_stim(filename):
-        '''Find day given filename (current structure of names)'''
+    '''Find stim day given filename (current structure of names)'''
     if filename.split('_')[0] == '2020' or filename.split('_')[0] == '2021':
-        return filename.split('_')[4].split(".")[0][1:]
+        return filename.split('_')[5].split(".")[0][1:]
     else:
         return '0' + filename.split('_')[1]
         
 def find_animal(filename):
     '''Find animal given filename (current structure of names)'''
-    if filename.split('_')[0] == '2020':
+    if filename.split('_')[0] == '2020' or filename.split('_')[0] == '2021':
         return filename.split('_')[3]
     else:
         return filename.split('_')[0].upper()
+
+
+
+
+
+
+
 
 
 
@@ -137,8 +146,8 @@ def find_animal(filename):
 startTime = datetime.now()
 
 # specify locations and files and make empty dataframe
-rootdir = 'D:\\MEP_MAT\\'
-cols = ['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
+rootdir = 'D:\\for_testing\\'
+cols = ['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
 low_amp_list = []
 mep_time_ms = 30
@@ -155,7 +164,7 @@ print('Total time: ', totalTime)
 # create STA dataframe
 df_STA = df_MEP
 df_STA['EMG_Amplitude'] = df_STA['EMG_Amplitude'].abs()
-df_STA = df_STA.groupby(['Animal', 'Day', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
+df_STA = df_STA.groupby(['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
 df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
 # save dataframes to CSV files
