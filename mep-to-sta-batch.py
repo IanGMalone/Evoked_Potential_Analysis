@@ -33,7 +33,7 @@ import time
 
 #!!!! change sample to time?
 #### define functions
-def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
+def file_to_df(path, file_name, df, high_v_list, mep_time_ms, col_names=['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Takes .mat file containing MEP data and returns a dataframe of that data'''
     # load file and extract keys
     filepath = path + file_name
@@ -76,7 +76,7 @@ def file_to_df(path, file_name, df, low_amp_list, mep_time_ms, col_names=['Anima
         df_mep = df_mep.append(mep_to_df(animal, day_postop, day_stim, 'Right', peak_heights[i], rEMG[peak_locs[i]:peak_locs[i]+mep_sample_length], samp_freq, col_names), ignore_index=True)
     
     # 400 uA is 4.0 for animals <= N13, 0.4 for animals > N1
-    if animal in low_amp_list:
+    if animal in high_v_list:
         df_mep[col_names[4]] = round_to_5(df_mep[col_names[4]]*100)
     else:
         df_mep[col_names[4]] = round_to_5(df_mep[col_names[4]]*1000)
@@ -146,15 +146,15 @@ def find_animal(filename):
 startTime = datetime.now()
 
 # specify locations and files and make empty dataframe
-rootdir = 'D:\\for_testing\\'
+rootdir = 'D:\\TOTAL_MEP_MAT_NEIL\\'
 cols = ['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']
 df_MEP = pd.DataFrame(columns=cols)
-low_amp_list = []
-mep_time_ms = 30
+high_v_list = ['N01', 'N04', 'N05', 'N09', 'N10', 'N11', 'N13' ]
+mep_time_ms = 40
 
 # append dataframes for all files to make one big dataframe
 for f in list_files(rootdir):
-    df_MEP = df_MEP.append(file_to_df(rootdir, f, df_MEP, low_amp_list, mep_time_ms, cols))
+    df_MEP = df_MEP.append(file_to_df(rootdir, f, df_MEP, high_v_list, mep_time_ms, cols))
 
 # measure how long the big dataframe creation took to execute
 endTime = datetime.now()
