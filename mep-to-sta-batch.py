@@ -163,7 +163,7 @@ print('Total time: ', totalTime)
 
 # create STA dataframe
 df_STA = df_MEP
-df_STA['EMG_Amplitude'] = df_STA['EMG_Amplitude'].abs()
+df_STA['EMG_Amplitude'] = df_STA['EMG_Amplitude']
 df_STA = df_STA.groupby(['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample'], as_index=False)['EMG_Amplitude'].mean()
 df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
