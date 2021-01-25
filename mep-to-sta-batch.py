@@ -170,8 +170,8 @@ df_STA.rename(columns={'EMG_Amplitude': 'STA_Amplitude'}, inplace=True)
 
 # save dataframes to CSV files
 date_str = time.strftime("%Y_%m_%d")
-df_MEP.to_csv(r'D:\Data\\df_MEP_' + proj +'_' + date_str + '.csv', index = False)
-df_STA.to_csv(r'D:\\Data\\df_STA_' + proj +'_' + date_str + '.csv', index = False)
+df_MEP.to_csv(r'D:\Dataframe_CSVs\df_MEP_' + proj +'_' + date_str + '.csv', index = False)
+df_STA.to_csv(r'D:\Dataframe_CSVs\df_STA_' + proj +'_' + date_str + '.csv', index = False)
 
 
 
