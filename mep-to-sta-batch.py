@@ -31,7 +31,6 @@ import time
 
 #################you should probably downsample these files before saving them as MEP
 
-#!!!! change sample to time?
 #### define functions
 def file_to_df(path, file_name, df, high_v_list, mep_time_ms, col_names=['Animal', 'Day_Postop', 'Day_Stim', 'Side', 'Stim_Amplitude', 'Sample', 'EMG_Amplitude']):
     '''Takes .mat file containing MEP data and returns a dataframe of that data'''
