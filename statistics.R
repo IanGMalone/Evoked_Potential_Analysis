@@ -55,6 +55,12 @@ fit <- lmer(p2p_amplitude_scaled ~ Stim_Amplitude*Day_Stim*Group + (1|Animal), d
 
 summary(fit)
 Anova(fit, type='III')
+
+
+lsmeans(fit, pairwise ~ Stim_Amplitude:Day_Stim:Group, adjust = "tukey", pbkrtest.limit = 4000)
+
+
+
 #stimulation has a huge effect
 #stim amp interacts with group... different groups have diff relationship w stim
 # group changes with day
