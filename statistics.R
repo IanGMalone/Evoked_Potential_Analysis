@@ -15,7 +15,7 @@ df_p2p_scaled <- read.csv(file = 'D:\\df_p2p_scaled.csv')
 #type 3 drops terms and compares to models that have everything
 #type 1 order matters... added this first, then the next... so you look at sequential differences
 #you typically do not want type 1 in biology
-#satterthwaite's method... but wald x^2 should work.. it is acceptable.. should vary too much
+#satterthwaite's method... but wald x^2 should work.. it is acceptable.. shouldnt vary too much
 
 #for pairwise do comparison of least squared means
 #in lmertools package.. may be newer version
@@ -35,14 +35,14 @@ df_p2p_scaled <- df_p2p_scaled %>%
 #  rename(Left_PWT = `50% WT...7`) %>%
 #  rename(Right_PWT = `50% WT...11`)
 
-#factor will be anything that wwill be treated as a nominal variable rather than number
+#factor will be anything that will be treated as a nominal variable rather than number
 #animal, group, day(??)
 
 
 
 
 fit <- lmer(p2p_amplitude_scaled ~ Stim_Amplitude*Day_Stim*Group + (1|Animal), data=df_p2p_scaled)
-#does each animal need it's own slope
+#does each animal need it's own slope...yes
 # dont overlook main effects... look at those smaller ones.. main effects can be important.. could be eating up some of pairwise comparisons at specific time points
 # interaction can get diluted 
 
@@ -82,15 +82,15 @@ lsmeans(fit, pairwise ~ Stim_Amplitude:Day_Stim:Group, adjust = "tukey", pbkrtes
 #keep group variable as it is... more complexity will make model too difficult to interpret
 
 
-emmeans(fit, "Day", pbkrtest.limit = 4000)
+# emmeans(fit, "Day", pbkrtest.limit = 4000)
 
-summary(glht(fit, linfct = mcp(Group = "Tukey")), test = adjusted("holm"))
-
-
-emmeans(model, list(pairwise ~ Group), adjust = "tukey")
+# summary(glht(fit, linfct = mcp(Group = "Tukey")), test = adjusted("holm"))
 
 
-emtrends(fit, pairwise ~ treatment, var = "dose")
+# emmeans(model, list(pairwise ~ Group), adjust = "tukey")
+
+
+# emtrends(fit, pairwise ~ treatment, var = "dose")
 
 
 
