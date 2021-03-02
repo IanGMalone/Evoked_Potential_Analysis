@@ -140,7 +140,7 @@ def find_animal(filename):
 
 
 
-proj = 'SPARC'
+proj = 'NEIL'
 
 #### do processing
 startTime = datetime.now()
