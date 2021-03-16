@@ -101,6 +101,49 @@ lsmeans(fit, pairwise ~ Stim_Amplitude:Day_Stim:Group, adjust = "tukey", pbkrtes
 
 # ls_means(Model_TactileSensitity, which = "Group:Week", pairwise = TRUE, adjust = "tukey")
 
+############# 
 
+# import libraries
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
 
+#load data
+df_avg_p2p <- read.csv(file = 'D:\\df_avg_p2p.csv')
 
+# remove unnecessary columns
+keeps <- c("Group", "Day_Stim", "p2p_amplitude_scaled", 'Animal')
+df_avg_p2p <- df_avg_p2p[keeps]
+
+# convert factor variables to factors
+df_avg_p2p <- df_avg_p2p %>%
+  convert_as_factor(Group, Day_Stim, Animal)
+
+# check summary statistics
+df_avg_p2p %>%
+  group_by(Group, Day_Stim) %>%
+  get_summary_stats(p2p_amplitude_scaled, type = "mean_sd")
+
+# plot boxplot
+ggboxplot(df_avg_p2p, "Group", "p2p_amplitude_scaled", color = "Day_Stim",
+          palette = c("#00AFBB", "#E7B800"))
+
+# check for extreme outliers
+df_avg_p2p %>%
+  group_by(Group, Day_Stim) %>%
+  identify_outliers(p2p_amplitude_scaled)
+
+# check normality
+df_avg_p2p %>%
+  group_by(Group, Day_Stim) %>%
+  shapiro_test(p2p_amplitude_scaled) # shapiro wilks
+
+ggqqplot(df_avg_p2p, "p2p_amplitude_scaled", ggtheme = theme_bw()) +
+  facet_grid(Group ~ Day_Stim, labeller = "label_both") # QQ plot
+
+# computation 2 way rm anova
+res.aov <- anova_test(
+  data = df_avg_p2p, dv = p2p_amplitude_scaled, wid = Animal,
+  within = c(Group, Day_Stim)
+)
+get_anova_table(res.aov)
