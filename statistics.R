@@ -101,7 +101,7 @@ lsmeans(fit, pairwise ~ Stim_Amplitude:Day_Stim:Group, adjust = "tukey", pbkrtes
 
 # ls_means(Model_TactileSensitity, which = "Group:Week", pairwise = TRUE, adjust = "tukey")
 
-############# 
+############# Significance betwe
 
 # import libraries
 library(tidyverse)
@@ -109,7 +109,7 @@ library(ggpubr)
 library(rstatix)
 
 #load data
-df_avg_p2p <- read.csv(file = 'D:\\df_avg_p2p.csv')
+df_avg_p2p <- read.csv(file = 'D:\\df_d1d4_pchange.csv')
 
 # remove unnecessary columns
 keeps <- c("Group", "Day_Stim", "p2p_amplitude_scaled", 'Animal')
@@ -144,6 +144,6 @@ ggqqplot(df_avg_p2p, "p2p_amplitude_scaled", ggtheme = theme_bw()) +
 # computation 2 way rm anova
 res.aov <- anova_test(
   data = df_avg_p2p, dv = p2p_amplitude_scaled, wid = Animal,
-  within = c(Group, Day_Stim)
+  within = c(Day_Stim), between=c(Group)
 )
 get_anova_table(res.aov)
