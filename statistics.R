@@ -112,38 +112,59 @@ library(rstatix)
 df_avg_p2p <- read.csv(file = 'D:\\df_d1d4_pchange.csv')
 
 # remove unnecessary columns
-keeps <- c("Group", "Day_Stim", "p2p_amplitude_scaled", 'Animal')
-df_avg_p2p <- df_avg_p2p[keeps]
+#keeps <- c("Group", "Day_Stim", "p2p_amplitude_scaled", 'Animal')
+#df_avg_p2p <- df_avg_p2p[keeps]
 
 # convert factor variables to factors
 df_avg_p2p <- df_avg_p2p %>%
-  convert_as_factor(Group, Day_Stim, Animal)
+  convert_as_factor(Group,  Animal)
 
 # check summary statistics
 df_avg_p2p %>%
-  group_by(Group, Day_Stim) %>%
-  get_summary_stats(p2p_amplitude_scaled, type = "mean_sd")
+  group_by(Group) %>%
+  get_summary_stats(d1d4_pchange, type = "mean_sd")
 
 # plot boxplot
-ggboxplot(df_avg_p2p, "Group", "p2p_amplitude_scaled", color = "Day_Stim",
+ggboxplot(df_avg_p2p, "Group", "d1d4_pchange",
           palette = c("#00AFBB", "#E7B800"))
 
 # check for extreme outliers
 df_avg_p2p %>%
-  group_by(Group, Day_Stim) %>%
-  identify_outliers(p2p_amplitude_scaled)
+  group_by(Group) %>%
+  identify_outliers(d1d4_pchange)
 
 # check normality
 df_avg_p2p %>%
-  group_by(Group, Day_Stim) %>%
-  shapiro_test(p2p_amplitude_scaled) # shapiro wilks
+  group_by(Group) %>%
+  shapiro_test(d1d4_pchange) # shapiro wilks
 
-ggqqplot(df_avg_p2p, "p2p_amplitude_scaled", ggtheme = theme_bw()) +
-  facet_grid(Group ~ Day_Stim, labeller = "label_both") # QQ plot
+ggqqplot(df_avg_p2p, "d1d4_pchange", ggtheme = theme_bw()) +
+  facet_grid(Group, labeller = "label_both") # QQ plot
 
 # computation 2 way rm anova
 res.aov <- anova_test(
-  data = df_avg_p2p, dv = p2p_amplitude_scaled, wid = Animal,
-  within = c(Day_Stim), between=c(Group)
+  data = df_avg_p2p, dv = d1d4_pchange, wid = Animal,
+  between=c(Group)
+)
+get_anova_table(res.aov)
+
+
+
+
+#load data
+df_avg_p2p <- read.csv(file = 'D:\\df_d1d4_pchange.csv')
+
+# remove unnecessary columns
+#keeps <- c("Group", "Day_Stim", "p2p_amplitude_scaled", 'Animal')
+#df_avg_p2p <- df_avg_p2p[keeps]
+
+# convert factor variables to factors
+df_avg_p2p <- df_avg_p2p %>%
+  convert_as_factor(Group,  Animal)
+
+# computation 2 way rm anova
+res.aov <- anova_test(
+  data = df_avg_p2p, dv = d1d4_pchange, wid = Animal,
+  between=c(Group)
 )
 get_anova_table(res.aov)
