@@ -39,9 +39,10 @@ df_p2p_scaled <- df_p2p_scaled %>%
 #animal, group, day(??)
 
 
+fit <- lmer(p2p_amplitude_scaled ~ Stim_Amplitude*Day_Stim*Group + 
+       (Stim_Amplitude|Animal:Day_Stim:Group), data=df_p2p_scaled) 
 
-
-fit <- lmer(p2p_amplitude_scaled ~ Stim_Amplitude*Day_Stim*Group + (1|Animal), data=df_p2p_scaled)
+# fit <- lmer(p2p_amplitude_scaled ~ Stim_Amplitude*Day_Stim*Group + (1|Animal), data=df_p2p_scaled)
 #does each animal need it's own slope...yes
 # dont overlook main effects... look at those smaller ones.. main effects can be important.. could be eating up some of pairwise comparisons at specific time points
 # interaction can get diluted 
