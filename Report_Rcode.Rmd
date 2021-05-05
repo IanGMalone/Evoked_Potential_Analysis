@@ -11,7 +11,7 @@ library(lme4)
 library(tidyverse)
 library(sjPlot)
 
-df_p2p_scaled1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_auc_left.csv')
+df_p2p_scaled1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_p2p_right.csv')
 
 df_p2p_scaled <- df_p2p_scaled1 %>%
   mutate(Day = as_factor(Day)) %>% 
@@ -31,11 +31,12 @@ df_yes_injury = df_p2p_scaled %>%
 ### Day 4
 ```{r}
 df_d4 = 
-  df_yes_injury %>% 
-  filter(Day == 4)
+  df_p2p_scaled %>% 
+  filter(Therapy == "Yes")%>% 
+  filter(Day==4)
 
 # Random Slope
-fit4 = lmer(p2p ~ log(Stim_Amp) * Therapy + (0 + log(Stim_Amp) |Animal), data=df_d4, REML = F)
+fit4 = lmer(p2p ~ log(Stim_Amp) * Injury + (0 + log(Stim_Amp) |Animal), data=df_d4, REML = F)
 
 ## Random Intercept
 # fit4 = lmer(p2p ~ log(Stim_Amp) * Therapy + (1 | Animal), data=df_d4, REML = F)
