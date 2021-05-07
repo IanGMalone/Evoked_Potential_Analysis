@@ -1,0 +1,129 @@
+---
+title: "Mixed Effect Modelling "
+author: "Sijia Yue and Ian Malone"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+
+# import libraries
+knitr::opts_chunk$set(echo = TRUE)
+library(lme4)
+library(tidyverse)
+library(sjPlot)
+
+# import dataframes
+df_neilsen1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_neilsen.csv')
+
+drop1 <- c("X","Value", "Minmax_Original_Value")
+df_neilsen1 = df_neilsen1[,!(names(df_neilsen1) %in% drop1)]
+
+# prepare dataframe for statistical modelling
+df_neilsen <- df_neilsen1 %>%
+  mutate(Day = as_factor(Day)) %>% 
+  mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
+         Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"),
+         evoked_potential_output = Scalar_Original_Value*100) 
+
+drop <- c("Group","Scalar_Original_Value")
+df_neilsen = df_neilsen[,!(names(df_neilsen) %in% drop)]
+
+
+## Random Intercept
+# fit4 = lmer(p2p ~ log(Stim_Amp) * Therapy + (1 | Animal), data=df_d4, REML = F)
+```
+
+
+#### C2HS+EES vs. NoInj+EES ####
+```{r}
+
+# compare: C2HS+EES vs. NoInj+EES, single side, single day
+
+df = 
+  df_neilsen %>% 
+  filter(Therapy == "Yes")%>% 
+  filter(Side == "Left")%>% # change which side is being compared here
+  filter(Metric == "p2p")%>% # change which metric is used here
+  filter(Time_Bin == "1_to_21ms")%>%
+  filter(Day == 1) # change which day is being compared here
+
+# Random Slope
+fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Injury + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
+
+#plot_model(fit)
+tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
+#summary(fit)
+
+```
+
+
+#### C2HS+Sham vs. C2HS+EES ####
+```{r}
+
+# compare: C2HS+EES vs. NoInj+EES, single side, single day
+
+df = 
+  df_neilsen %>% 
+  filter(Injury == "Yes")%>% 
+  filter(Side == "Left")%>% # change which side is being compared here
+  filter(Metric == "p2p")%>% # change which metric is used here
+  filter(Time_Bin == "1_to_21ms")%>%
+  filter(Day == 4) # change which day is being compared here
+
+# Random Slope
+fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Therapy + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
+
+#plot_model(fit)
+tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
+#summary(fit)
+
+```
+
+
+#### Left vs. Right ####
+```{r}
+
+# compare left vs. right, single group, single day
+
+df = 
+  df_neilsen %>% 
+  filter(Injury == "Yes" & Therapy == "Yes")%>% # change which group is being compared here
+  filter(Metric == "p2p")%>% # change which metric is used here
+  filter(Time_Bin == "1_to_21ms")%>%
+  filter(Day == 1) # change which day is being compared here
+  
+# Random Slope
+fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Side + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
+
+#plot_model(fit)
+tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
+#summary(fit)
+```
+
+
+#### Days [4,3,2] vs. Day 1 ####
+```{r}
+
+# compare days, single group, single side
+
+df = 
+  df_neilsen %>% 
+  filter(Injury == "Yes" & Therapy == "Yes")%>% # change which group is being compared here
+  filter(Metric == "p2p")%>% # change which metric is used here
+  filter(Time_Bin == "1_to_21ms")%>%
+  filter(Side == 'Left') # change which side is being compared here
+  
+# Random Slope
+fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Day + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
+
+#plot_model(fit)
+tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
+#summary(fit)
+```
+
+
+
+
+
+
