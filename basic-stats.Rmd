@@ -1,0 +1,59 @@
+---
+title: "Basic Stats"
+author: "Ian Malone"
+date: "5/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+
+df_timebin1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_anova.csv')
+
+df_timebin <- df_timebin1 %>%
+  mutate(Group = as_factor(Group)) %>% 
+  mutate(Time_Bin = as_factor(Time_Bin)) %>%
+  mutate(Day = as_factor(Day))
+
+df_motor_threshold1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_motor_threshold.csv')
+
+df_motor_threshold <- df_motor_threshold1 %>%
+  mutate(Group = as_factor(Group)) %>% 
+  mutate(Animal = as_factor(Animal)) %>%
+  mutate(Day = as_factor(Day)) %>%
+  mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
+         Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
+
+```
+
+
+#### ANOVA and pairwise comparisons on time bin data ####
+```{r}
+df = 
+  df_timebin %>% 
+  filter(Day == 4) # change which day is being compared here
+
+anova_time_bin <- aov(Scalar_Original_Value ~ Group + Time_Bin + Group:Time_Bin, data = df)
+summary(anova_time_bin)
+TukeyHSD(anova_time_bin)
+
+```
+
+
+
+
+#### ANOVA and pairwise comparisons on motor threshold data ####
+```{r}
+
+df = 
+  df_motor_threshold %>% 
+  filter(Side == 'Left') %>% 
+  filter(Day == 4)
+
+anova_motor_threshold <- aov(Motor_Threshold ~ Injury * Therapy, data = df)
+summary(anova_motor_threshold)
+#TukeyHSD(anova_motor_threshold)
+
+```
+
+
