@@ -19,7 +19,7 @@ df_neilsen1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_neilsen.csv')
 drop1 <- c("X","Value", "Minmax_Original_Value")
 df_neilsen1 = df_neilsen1[,!(names(df_neilsen1) %in% drop1)]
 
-# prepare dataframe for statistical modelling
+# prepare dataframe for statistical modeling
 df_neilsen <- df_neilsen1 %>%
   mutate(Day = as_factor(Day)) %>% 
   mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
@@ -43,7 +43,7 @@ df_neilsen = df_neilsen[,!(names(df_neilsen) %in% drop)]
 df = 
   df_neilsen %>% 
   filter(Therapy == "Yes")%>% 
-  filter(Side == "Left")%>% # change which side is being compared here
+  filter(Side == "Right")%>% # change which side is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
   filter(Day == 1) # change which day is being compared here
@@ -61,15 +61,15 @@ tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
 #### C2HS+Sham vs. C2HS+EES ####
 ```{r}
 
-# compare: C2HS+EES vs. NoInj+EES, single side, single day
+# compare: C2HS+Sham vs. C2HS+EES, single side, single day
 
 df = 
   df_neilsen %>% 
   filter(Injury == "Yes")%>% 
-  filter(Side == "Left")%>% # change which side is being compared here
+  filter(Side == "Right")%>% # change which side is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
-  filter(Day == 4) # change which day is being compared here
+  filter(Day == 1) # change which day is being compared here
 
 # Random Slope
 fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Therapy + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
@@ -88,7 +88,7 @@ tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
 
 df = 
   df_neilsen %>% 
-  filter(Injury == "Yes" & Therapy == "Yes")%>% # change which group is being compared here
+  filter(Injury == "No" & Therapy == "No")%>% # change which group is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
   filter(Day == 1) # change which day is being compared here
@@ -102,17 +102,17 @@ tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
 ```
 
 
-#### Days [4,3,2] vs. Day 1 ####
+#### Day [4,3,2] vs. Day 1 ####
 ```{r}
 
 # compare days, single group, single side
 
 df = 
   df_neilsen %>% 
-  filter(Injury == "Yes" & Therapy == "Yes")%>% # change which group is being compared here
+  filter(Injury == "No" & Therapy == "No")%>% # change which group is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
-  filter(Side == 'Left') # change which side is being compared here
+  filter(Side == 'Right') # change which side is being compared here
   
 # Random Slope
 fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Day + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
