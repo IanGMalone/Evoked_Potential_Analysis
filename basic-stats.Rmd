@@ -5,6 +5,7 @@ date: "5/8/2021"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 library(tidyverse)
 
@@ -24,6 +25,16 @@ df_motor_threshold <- df_motor_threshold1 %>%
   mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
          Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
 
+df_peak_time1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_plotter.csv')
+
+df_peak_time <- df_peak_time1 %>%
+  mutate(Group = as_factor(Group)) %>% 
+  mutate(Animal = as_factor(Animal)) %>%
+  mutate(Day = as_factor(Day_Stim)) %>%
+  mutate(Side = as_factor(Side)) %>%
+  mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
+         Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
+
 ```
 
 
@@ -40,20 +51,31 @@ TukeyHSD(anova_time_bin)
 ```
 
 
-
-
 #### ANOVA and pairwise comparisons on motor threshold data ####
 ```{r}
 
 df = 
   df_motor_threshold %>% 
-  filter(Side == 'Left') %>% 
-  filter(Day == 4)
+  filter(Side == 'Left') # %>% 
+ # filter(Day == 4)
 
-anova_motor_threshold <- aov(Motor_Threshold ~ Injury * Therapy, data = df)
+anova_motor_threshold <- aov(Motor_Threshold ~ Injury * Day, data = df)
 summary(anova_motor_threshold)
-#TukeyHSD(anova_motor_threshold)
+TukeyHSD(anova_motor_threshold)
 
 ```
 
 
+#### ANOVA and pairwise comparisons on time to peak data ####
+```{r}
+
+df = 
+  df_peak_time %>% 
+  filter(Side == 'Right') #%>% 
+  #filter(Day == 4)
+
+anova_peak_time <- aov(Time_of_Peak ~ Therapy*Day, data = df)
+summary(anova_peak_time)
+TukeyHSD(anova_peak_time)
+
+```
