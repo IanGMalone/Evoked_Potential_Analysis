@@ -8,6 +8,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(ggpubr)
+library(rstatix)
 
 df_timebin1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_anova.csv')
 
@@ -25,15 +27,16 @@ df_motor_threshold <- df_motor_threshold1 %>%
   mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
          Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
 
-df_peak_time1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_plotter.csv')
+df_peak_time1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_time_to_peak.csv')
 
 df_peak_time <- df_peak_time1 %>%
   mutate(Group = as_factor(Group)) %>% 
   mutate(Animal = as_factor(Animal)) %>%
-  mutate(Day = as_factor(Day_Stim)) %>%
+  mutate(Day = as_factor(Day)) %>%
   mutate(Side = as_factor(Side)) %>%
   mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
          Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
+df_peak_time = subset(df_peak_time, select = -c(X) )
 
 ```
 
@@ -56,26 +59,151 @@ TukeyHSD(anova_time_bin)
 
 df = 
   df_motor_threshold %>% 
-  filter(Side == 'Left') # %>% 
+  filter(Side == 'Right') # %>% 
  # filter(Day == 4)
 
-anova_motor_threshold <- aov(Motor_Threshold ~ Injury * Day, data = df)
+anova_motor_threshold <- aov(Motor_Threshold ~ Therapy, data = df)
 summary(anova_motor_threshold)
 TukeyHSD(anova_motor_threshold)
 
 ```
 
 
-#### ANOVA and pairwise comparisons on time to peak data ####
-```{r}
+#### Time to Peak (latency analysis) ####
+
+```{r Dataframe}
 
 df = 
   df_peak_time %>% 
-  filter(Side == 'Right') #%>% 
-  #filter(Day == 4)
-
-anova_peak_time <- aov(Time_of_Peak ~ Therapy*Day, data = df)
-summary(anova_peak_time)
-TukeyHSD(anova_peak_time)
+  filter(Side == "Right") # set the side you are testing here
 
 ```
+
+
+```{r Summary Statistics}
+
+df %>%
+  group_by(Injury, Therapy, Day) %>%
+  get_summary_stats(Peak_Time, type = "mean_sd")
+
+```
+
+
+```{r Visualization}
+
+bxp <- ggboxplot(
+  df, x = "Injury", y = "Peak_Time",
+  color = "Day", palette = "jco",
+  facet.by = "Therapy", short.panel.labs = FALSE
+  )
+bxp
+
+```
+
+```{r Check Outliers}
+
+df %>%
+  group_by(Injury, Therapy, Day) %>%
+  identify_outliers(Peak_Time)
+# we do have extreme outliers..
+# run anova on entire data
+# rerun anova without outliers
+# if same, then report analysis on full data
+# if different, run a non-parametric (kruskal wallis) or just report analysis with an without outliers
+```
+
+```{r Check Normality (Shapiro-Wilks)}
+
+df %>%
+  group_by(Injury, Therapy, Day) %>%
+  shapiro_test(Peak_Time)
+
+# data are not normally distributed
+```
+
+```{r Check Normality QQ Plot}
+
+ggqqplot(df, "Peak_Time", ggtheme = theme_bw()) +
+  facet_grid(Injury + Therapy ~ Day, labeller = "label_both")
+
+# data potentially look normally distributed
+```
+
+```{r Computation}
+
+res.aov <- anova_test(
+  data = df, dv = Peak_Time, wid = Animal,
+  between = c(Injury, Therapy, Day)
+  )
+get_anova_table(res.aov)
+
+```
+
+```{r}
+two.way <- df %>%
+  group_by(Injury) %>%
+  anova_test(dv = Peak_Time, wid = Animal, between = c(Therapy, Day))
+get_anova_table(two.way)
+```
+
+
+
+
+```{r Post Hoc Tests}
+
+# Pairwise comparisons
+pwc <- df %>%
+  group_by(Therapy, Day) %>%
+  pairwise_t_test(Peak_Time ~ Injury, paired = FALSE, p.adjust.method = "bonferroni") #%>%
+#  select(-df, -statistic) # Remove details
+# Show comparison results for "diet:no,exercises:yes" groups
+#pwc %>% filter(diet == "no", exercises == "yes") %>%
+#  select(-p)     # remove p columns
+pwc
+```
+
+```{r Report}
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "exercises")
+pwc.filtered <- pwc %>% 
+  filter(diet == "no", exercises == "yes")
+bxp + 
+  stat_pvalue_manual(pwc.filtered, tip.length = 0, hide.ns = TRUE) +
+  labs(
+    subtitle = get_test_label(res.aov, detailed = TRUE),
+    caption = get_pwc_label(pwc)
+  )
+
+```
+
+
+
+
+
+#### DELTE ANOVA and pairwise comparisons on time to peak data ####
+```{r}
+
+df = 
+  df_peak_time #%>% 
+ # filter(Side == 'Left') #%>% 
+ # filter(Day == 3)
+
+#anova_peak_time <- aov(Time_of_Peak ~ Injury*Therapy*Day, data = df)
+#summary(anova_peak_time)
+#TukeyHSD(anova_peak_time)
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
