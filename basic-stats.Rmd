@@ -75,7 +75,7 @@ TukeyHSD(anova_motor_threshold)
 
 df = 
   df_peak_time %>% 
-  filter(Side == "Right") # set the side you are testing here
+  filter(Side == "Left") # set the side you are testing here
 
 ```
 
