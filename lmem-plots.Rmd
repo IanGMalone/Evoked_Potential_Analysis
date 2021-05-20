@@ -1,0 +1,92 @@
+---
+title: "lmem-plots"
+author: "Ian Malone"
+date: "5/12/2021"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(stringr)
+
+#laptop dff <- read.csv("C:\\Users\\iangm\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv")
+dff <- read.csv("C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv")
+
+df1 <- dff %>%
+  mutate(Day = as_factor(Day)) %>%
+  filter(str_detect(Predictor, '\\*'))
+
+
+```
+
+
+#### COMPARISON C2HS+EES vs. NoInj+EES FOR EACH DAY ####
+```{r}
+
+df =
+  df1 %>%
+  filter(Model == 'C2HS+EES vs. NoInj+EES')
+
+
+ggplot(df) + 
+geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
+  facet_grid(cols=vars(Side))
+
+```
+
+
+
+
+#### COMPARISON C2HS+Sham vs. C2HS+EES FOR EACH DAY ####
+```{r}
+
+df =
+  df1 %>%
+  filter(Model == 'C2HS+Sham vs. C2HS+EES')
+
+
+ggplot(df) + 
+geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
+  facet_grid(cols=vars(Side)) +
+      geom_text(aes(Predictor,Estimate, label = P_Label))
+
+```
+
+
+
+
+#### COMPARISON BETWEEN SIDES FOR EACH DAY ####
+```{r}
+
+df =
+  df1 %>%
+  filter(Model == 'Left vs. Right')
+
+ggplot(df) + 
+geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
+  facet_grid(cols=vars(Group)) +
+      geom_text(aes(Predictor,Estimate, label = P_Label))
+
+```
+
+
+
+
+
+
+#### COMPARISON BETWEEN DayS FOR EACH GROUP AND SIDE ####
+```{r}
+
+df =
+  df1 %>%
+  filter(Model == 'Day [4,3,2] vs. Day 1')
+
+ggplot(df) + 
+geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Predictor, color=Predictor), position = position_dodge(width = 1), size=0.5) + 
+  facet_grid(rows=vars(Group), cols=vars(Side)) +
+      geom_text(aes(Predictor,Estimate, label = P_Label), hjust = 2)
+
+
+```
