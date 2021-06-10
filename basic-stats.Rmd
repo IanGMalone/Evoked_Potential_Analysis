@@ -52,12 +52,14 @@ df_peak_time = subset(df_peak_time, select = -c(X) )
 ```{r}
 df = 
   df_timebin %>% 
-  filter(Day == 4) %>% # change which day is being compared here
+  filter(Day ==1 | Day == 4) %>% # change which day is being compared here
   filter(Side == 'Left') %>%
   filter(Metric == 'p2p') %>%
-  filter(Injury == 'Yes')
+  filter(Therapy == 'No')%>%
+  filter(Injury == 'Yes')%>%
+  filter(Stim_Amp > 200)
 
-anova_time_bin <- aov(Scalar_Original_Value ~ Time_Bin*Therapy, data = df)
+anova_time_bin <- aov(Scalar_Original_Value ~ Time_Bin*Day, data = df)
 summary(anova_time_bin)
 TukeyHSD(anova_time_bin)
 
@@ -73,9 +75,13 @@ df =
  # filter(Injury == 'Yes') %>%
   filter(Day == 4)
 
-anova_motor_threshold <- aov(Motor_Threshold ~ Therapy, data = df)
-summary(anova_motor_threshold)
-TukeyHSD(anova_motor_threshold)
+#anova_motor_threshold <- aov(Motor_Threshold ~ Therapy, data = df)
+#summary(anova_motor_threshold)
+#TukeyHSD(anova_motor_threshold)
+
+res <- t.test(Motor_Threshold ~ Therapy, data = df, var.equal = FALSE)
+res
+res$p.value
 
 ```
 
@@ -204,9 +210,9 @@ df =
   df_peak_time %>% 
   filter(Side == 'Left') %>%
  # filter(Injury == 'Yes') %>%
-  filter(Day == 1 | Day == 4)
+  filter(Day == 4)
 
-anova_peak_time <- aov(Peak_Time ~ Injury*Day*Therapy, data = df)
+anova_peak_time <- aov(Peak_Time ~ Injury*Therapy, data = df)
 summary(anova_peak_time)
 TukeyHSD(anova_peak_time)
 
