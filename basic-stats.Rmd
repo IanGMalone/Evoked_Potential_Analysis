@@ -11,14 +11,19 @@ library(tidyverse)
 library(ggpubr)
 library(rstatix)
 
-df_timebin1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_anova.csv')
+df_timebin1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_anova.csv') #desktop
+#df_timebin1 <- read.csv(file = 'C:\\Users\\iangm\\Google Drive\\IanGMalone\\Desktop_Stuff\\For-Me\\Neilsen\\Dataframes\\df_anova.csv') #laptop
 
 df_timebin <- df_timebin1 %>%
   mutate(Group = as_factor(Group)) %>% 
   mutate(Time_Bin = as_factor(Time_Bin)) %>%
-  mutate(Day = as_factor(Day))
+  mutate(Day = as_factor(Day)) %>%
+  mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
+         Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
 
-df_motor_threshold1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_motor_threshold.csv')
+df_motor_threshold1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_motor_threshold.csv') #desktop
+#df_motor_threshold1 <- read.csv(file = 'C:\\Users\\iangm\\Google Drive\\IanGMalone\\Desktop_Stuff\\For-Me\\Neilsen\\Dataframes\\df_motor_threshold.csv') #laptop
+
 
 df_motor_threshold <- df_motor_threshold1 %>%
   mutate(Group = as_factor(Group)) %>% 
@@ -27,7 +32,9 @@ df_motor_threshold <- df_motor_threshold1 %>%
   mutate(Injury = if_else(str_detect(Group, "Yes Injury"), "Yes", "No"),
          Therapy = if_else(str_detect(Group, "Yes EES"), "Yes", "No"))
 
-df_peak_time1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_time_to_peak.csv')
+df_peak_time1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_time_to_peak.csv') #desktop
+#df_peak_time1 <- read.csv(file = 'C:\\Users\\iangm\\Google Drive\\IanGMalone\\Desktop_Stuff\\For-Me\\Neilsen\\Dataframes\\df_time_to_peak.csv') #laptop
+
 
 df_peak_time <- df_peak_time1 %>%
   mutate(Group = as_factor(Group)) %>% 
@@ -45,9 +52,12 @@ df_peak_time = subset(df_peak_time, select = -c(X) )
 ```{r}
 df = 
   df_timebin %>% 
-  filter(Day == 4) # change which day is being compared here
+  filter(Day == 4) %>% # change which day is being compared here
+  filter(Side == 'Left') %>%
+  filter(Metric == 'p2p') %>%
+  filter(Injury == 'Yes')
 
-anova_time_bin <- aov(Scalar_Original_Value ~ Group + Time_Bin + Group:Time_Bin, data = df)
+anova_time_bin <- aov(Scalar_Original_Value ~ Time_Bin*Therapy, data = df)
 summary(anova_time_bin)
 TukeyHSD(anova_time_bin)
 
@@ -59,8 +69,9 @@ TukeyHSD(anova_time_bin)
 
 df = 
   df_motor_threshold %>% 
-  filter(Side == 'Right') # %>% 
- # filter(Day == 4)
+ filter(Side == 'Left') %>%
+ # filter(Injury == 'Yes') %>%
+  filter(Day == 4)
 
 anova_motor_threshold <- aov(Motor_Threshold ~ Therapy, data = df)
 summary(anova_motor_threshold)
@@ -186,17 +197,18 @@ bxp +
 
 
 
-#### DELTE ANOVA and pairwise comparisons on time to peak data ####
+#### ANOVA and pairwise comparisons on time to peak data ####
 ```{r}
 
 df = 
-  df_peak_time #%>% 
- # filter(Side == 'Left') #%>% 
- # filter(Day == 3)
+  df_peak_time %>% 
+  filter(Side == 'Left') %>%
+ # filter(Injury == 'Yes') %>%
+  filter(Day == 1 | Day == 4)
 
-#anova_peak_time <- aov(Time_of_Peak ~ Injury*Therapy*Day, data = df)
-#summary(anova_peak_time)
-#TukeyHSD(anova_peak_time)
+anova_peak_time <- aov(Peak_Time ~ Injury*Day*Therapy, data = df)
+summary(anova_peak_time)
+TukeyHSD(anova_peak_time)
 
 
 

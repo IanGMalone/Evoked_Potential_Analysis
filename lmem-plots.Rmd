@@ -10,9 +10,10 @@ output: html_document
 library(tidyverse)
 library(ggplot2)
 library(stringr)
+library(scales)
 
-#laptop dff <- read.csv("C:\\Users\\iangm\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv")
-dff <- read.csv("C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv")
+#dff <- read.csv("C:\\Users\\iangm\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv") #laptop
+dff <- read.csv("C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv") #desktop
 
 df1 <- dff %>%
   mutate(Day = as_factor(Day)) %>%
@@ -27,12 +28,17 @@ df1 <- dff %>%
 
 df =
   df1 %>%
-  filter(Model == 'C2HS+EES vs. NoInj+EES')
+  filter(Model == 'C2HS+EES vs. NoInj+EES') %>%
+   filter(Side == 'Left')
 
 
 ggplot(df) + 
-geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
-  facet_grid(cols=vars(Side))
+geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
+ # facet_grid(cols=vars(Side)) +
+        scale_x_discrete(labels = wrap_format(10)) + geom_text(aes(Day,Estimate, label = P_Label), hjust = 2) +
+  ylab('\U0394Sensitivity (mV/A)') +
+  ggtitle('C2HS+EES vs. NoInj+EES') +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
@@ -44,30 +50,42 @@ geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Da
 
 df =
   df1 %>%
-  filter(Model == 'C2HS+Sham vs. C2HS+EES')
+  filter(Model == 'C2HS+Sham vs. C2HS+EES') %>%
+   filter(Side == 'Left')
+
 
 
 ggplot(df) + 
-geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
-  facet_grid(cols=vars(Side)) +
-      geom_text(aes(Predictor,Estimate, label = P_Label))
+geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
+ # facet_grid(cols=vars(Side)) +
+        scale_x_discrete(labels = wrap_format(10))+
+  geom_text(aes(Day,Estimate, label = P_Label), hjust = 2) +
+    ylab('\U0394Sensitivity (mV/A)') +
+  ggtitle('C2HS+EES vs. C2HS+Sham') +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
 
 
 
-#### COMPARISON BETWEEN SIDES FOR EACH DAY ####
+#### COMPARISON Left vs. Right FOR EACH DAY ####
 ```{r}
 
 df =
   df1 %>%
-  filter(Model == 'Left vs. Right')
+  filter(Model == 'Left vs. Right') %>%
+  filter(Group == 'C2HS+EES')
 
 ggplot(df) + 
-geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
-  facet_grid(cols=vars(Group)) +
-      geom_text(aes(Predictor,Estimate, label = P_Label))
+geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
+  facet_grid(cols=vars(Group))+
+        scale_x_discrete(labels = wrap_format(10)) + 
+  geom_text(aes(Day,Estimate, label = P_Label), hjust=1) +
+      ylab('\U0394Sensitivity (mV/A)') +
+  ggtitle('Left vs. Right') +
+  theme(plot.title = element_text(hjust = 0.5))
+
 
 ```
 
@@ -81,12 +99,18 @@ geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Da
 
 df =
   df1 %>%
-  filter(Model == 'Day [4,3,2] vs. Day 1')
+  filter(Model == 'Day [4,3,2] vs. Day 1')%>%
+  filter(Side == 'Left')%>%
+  filter(Group == 'C2HS+EES')
 
 ggplot(df) + 
 geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Predictor, color=Predictor), position = position_dodge(width = 1), size=0.5) + 
   facet_grid(rows=vars(Group), cols=vars(Side)) +
-      geom_text(aes(Predictor,Estimate, label = P_Label), hjust = 2)
+      scale_x_discrete(labels = wrap_format(10)) +
+  geom_text(aes(Predictor,Estimate, label = P_Label), hjust = 2) +
+        ylab('\U0394Sensitivity (mV/A)') +
+  ggtitle('Change from Day 1') +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 ```

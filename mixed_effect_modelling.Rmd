@@ -12,9 +12,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(lme4)
 library(tidyverse)
 library(sjPlot)
+library(ggplot2)
+library(Matrix)
+library(broom.mixed)
 
 # import dataframes
-df_neilsen1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_neilsen.csv')
+df_neilsen1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_neilsen.csv') #desktop
+#df_neilsen1 <- read.csv(file = 'C:\\Users\\iangm\\Google Drive\\IanGMalone\\Desktop_Stuff\\For-Me\\Neilsen\\Dataframes\\df_neilsen.csv') #laptop
+
 
 drop1 <- c("X","Value", "Minmax_Original_Value")
 df_neilsen1 = df_neilsen1[,!(names(df_neilsen1) %in% drop1)]
@@ -53,8 +58,9 @@ fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Injury + (0 + log(Stim_Amp)
 
 #plot_model(fit)
 tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
-#summary(fit)
+summary(fit)
 
+#contr.sum(fit)
 ```
 
 
