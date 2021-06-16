@@ -19,7 +19,14 @@ df1 <- dff %>%
   mutate(Day = as_factor(Day)) %>%
   filter(str_detect(Predictor, '\\*'))
 
+# The palette with grey:
+cbPalette <- c('#D81B60', '#1E88E5', '#FFC107', '#004D40')
 
+# To use for fills, add
+#  scale_fill_manual(values=cbPalette)
+
+# To use for line and point colors, add
+#  scale_color_manual(values=cbPalette)
 ```
 
 
@@ -33,12 +40,14 @@ df =
 
 
 ggplot(df) + 
-geom_pointrange(aes(x=Day, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, color=Predictor), position = position_dodge(width = 1), size=1) + 
+geom_pointrange(aes(x=Day, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, shape=Predictor), position = position_dodge(width = 1), size=1) + 
  # facet_grid(cols=vars(Side)) +
-        scale_x_discrete(labels = wrap_format(10)) + geom_text(data=subset(df, Predictor == 'Stim_Amp [log] * Injury[Yes]'), aes(Day,New_Estimate, label = P_Label), size=7) +
+        scale_x_discrete(labels = wrap_format(10)) +
+  #geom_text(data=subset(df, Predictor == 'Stim_Amp [log] * Injury[Yes]'), aes(Day,New_Estimate, label = P_Label), size=7) +
   ylab('Sensitivity (a.u.)') +
   ggtitle('C2HS+EES vs. NoInj+EES') +
-  theme_classic() + theme(text = element_text(size = 20), legend.text = element_blank()) +  scale_color_manual(values=cbPalette)
+  theme_classic() + theme(text = element_text(size = 20), legend.text=element_blank()) + scale_shape_manual(values=c(1, 16))
+
 
 ggsave("D:\\gg4.png")
 
@@ -49,14 +58,7 @@ ggsave("D:\\gg4.png")
 
 #### COMPARISON C2HS+Sham vs. C2HS+EES FOR EACH DAY ####
 ```{r}
-# The palette with grey:
-cbPalette <- c('#D81B60', '#1E88E5', '#FFC107', '#004D40')
 
-# To use for fills, add
-#  scale_fill_manual(values=cbPalette)
-
-# To use for line and point colors, add
-#  scale_color_manual(values=cbPalette)
 
 df =
   df1 %>%
@@ -64,15 +66,14 @@ df =
    filter(Side == 'Left')
 
 
-
 ggplot(df) + 
-geom_pointrange(aes(x=Day, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, color=Predictor), position = position_dodge(width = 1), size=1) + 
+geom_pointrange(aes(x=Day, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, shape=Predictor), position = position_dodge(width = 1), size=1) + 
  # facet_grid(cols=vars(Side)) +
         scale_x_discrete(labels = wrap_format(10))+
   geom_text(data=subset(df, Predictor == 'Stim_Amp [log] * Therapy[Yes]'), aes(Day,New_Estimate, label = P_Label), size=7) +
     ylab('Sensitivity (a.u.)') +
   ggtitle('C2HS+EES vs. C2HS+Sham') +
-  theme_classic() + theme(text = element_text(size = 20), legend.text = element_blank()) +  scale_color_manual(values=cbPalette)
+  theme_classic() + theme(text = element_text(size = 20), legend.text=element_blank())  + scale_shape_manual(values=c(1, 16))
 
 ggsave("D:\\gg3.png")
 
@@ -87,16 +88,17 @@ ggsave("D:\\gg3.png")
 df =
   df1 %>%
   filter(Model == 'Left vs. Right') %>%
-  filter(Group == 'C2HS+EES')
+  filter(Group == 'C2HS+EES') %>%
+    mutate(Predictor = as_factor(Predictor))
 
 ggplot(df) + 
-geom_pointrange(aes(x=Day, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, color=Predictor), position = position_dodge(width = 1), size=1) + 
+geom_pointrange(aes(x=Day, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, shape=Predictor), position = position_dodge(width = 1), size=1) + 
   #facet_grid(cols=vars(Group))+
         scale_x_discrete(labels = wrap_format(10)) + 
   geom_text(data=subset(df, Predictor == 'Stim_Amp [log] * Side[Left]'), aes(Day,New_Estimate, label = P_Label), size=7) +
       ylab('Sensitivity (a.u.)') +
   ggtitle('Left vs. Right') +
-  theme_classic() + theme(text = element_text(size = 20), legend.text = element_blank()) +  scale_color_manual(values=cbPalette)
+  theme_classic() + theme(text = element_text(size = 20), legend.text=element_blank()) + scale_shape_manual(values=c(1,16))
 
 ggsave("D:\\gg2.png")
 
@@ -118,14 +120,14 @@ df =
   filter(Group == 'C2HS+EES')
 
 ggplot(df) + 
-geom_pointrange(aes(x=Predictor, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high, color=Predictor), position = position_dodge(width = 1), size=1) + 
+geom_pointrange(aes(x=Predictor, y=New_Estimate, ymin=new_ci_low, ymax=new_ci_high), position = position_dodge(width = 1), size=1) + 
  # facet_grid(rows=vars(Group), cols=vars(Side)) +
       scale_x_discrete(labels = wrap_format(10)) +
   geom_text(data=subset(df, Predictor %in% c('Stim_Amp [log] * Day [2]', 'Stim_Amp [log] * Day [3]', 'Stim_Amp [log] * Day [4]')), 
             aes(Predictor,New_Estimate, label = P_Label),hjust=-0.25, vjust=-0.5, size=7) +
         ylab('Sensitivity (a.u.)') +
   ggtitle('Change from Day 1') +
-  theme_classic() + theme(text = element_text(size = 20), legend.text = element_blank()) +  scale_color_manual(values=cbPalette) + scale_x_discrete(labels=c('Stim_Amp [log] * Day [1]' = "1", 'Stim_Amp [log] * Day [2]' = "2",
+  theme_classic() + theme(text = element_text(size = 20), legend.text = element_blank()) + scale_x_discrete(labels=c('Stim_Amp [log] * Day [1]' = "1", 'Stim_Amp [log] * Day [2]' = "2",
                               'Stim_Amp [log] * Day [3]' = "3", 'Stim_Amp [log] * Day [4]' = "4"))
 
 ggsave("D:\\gg1.png")
