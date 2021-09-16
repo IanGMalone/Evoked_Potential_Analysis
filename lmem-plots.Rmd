@@ -11,9 +11,17 @@ library(tidyverse)
 library(ggplot2)
 library(stringr)
 library(scales)
+library(ggpubr)
 
 #dff <- read.csv("C:\\Users\\iangm\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv") #laptop
 dff <- read.csv("C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting.csv") #desktop
+
+# change from cmV to microV
+dff$Estimate = dff$Estimate * 10
+dff$ci_low = dff$ci_low * 10
+dff$ci_high = dff$ci_high * 10
+
+write.csv(x=dff, file="C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\lmem_results_plotting_x1000.csv")
 
 df1 <- dff %>%
   mutate(Day = as_factor(Day)) %>%
@@ -28,17 +36,29 @@ df1 <- dff %>%
 
 df =
   df1 %>%
-  filter(Model == 'C2HS+EES vs. NoInj+EES') %>%
-   filter(Side == 'Left')
+  filter(Model == 'C2HS+EES vs. NoInj+EES')# %>%
+  # filter(Side == 'Left')
+
+df$Side_f = factor(df$Side, levels=c('Ipsilesional','Contralesional'))
+
+plot1 <- ggplot(df) + 
+  geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high), size=1) + 
+  facet_grid(.~Side_f) +
+  geom_text(aes(x=Day,y=ci_high, label=P_Label), vjust=-0.05, size=10) +
+  ylab(bquote(bold(SRS[C2HS~+~CLES]~-~SRS[Intact~+~CLES]~(mu*V%.%log(mu*A)^-1)))) +
+  #ggtitle('Difference in SLopes of Stimulus-Response Curves (C2HS + CLES vs. Intact + CLES)') +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=25, face='bold'), 
+        axis.title.x = element_text(size=27, face="bold"),
+        axis.title.y = element_text(size=27, face="bold"),
+        strip.text.x = element_text(size = 22, face="bold"),
+        strip.text.y = element_text(size = 22, face="bold"),
+        axis.text = element_text(size=22, face="bold"),
+        ) + 
+  geom_hline(yintercept=0, color='darkgray') +  
+  ggsave(file="C:\\Users\\Ian\\Downloads\\c2hs-cles-vs-intact-cles.png", units='in', width=12, height=10, dpi=300)
 
 
-ggplot(df) + 
-geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
- # facet_grid(cols=vars(Side)) +
-        scale_x_discrete(labels = wrap_format(10)) + geom_text(aes(Day,Estimate, label = P_Label), hjust = 2) +
-  ylab('\U0394Sensitivity (mV/A)') +
-  ggtitle('C2HS+EES vs. NoInj+EES') +
-  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
@@ -50,19 +70,29 @@ geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, col
 
 df =
   df1 %>%
-  filter(Model == 'C2HS+Sham vs. C2HS+EES') %>%
-   filter(Side == 'Left')
+  filter(Model == 'C2HS+Sham vs. C2HS+EES')# %>%
+  # filter(Side == 'Left')
 
+df$Side_f = factor(df$Side, levels=c('Ipsilesional','Contralesional'))
 
+plot2 <- ggplot(df) + 
+  geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high), size=1) + 
+  facet_grid(.~Side_f) +
+  
+  geom_text(aes(x=Day,y=ci_high, label=P_Label), vjust=-0.05, size=10) +
+  ylab(bquote(bold(SRS[C2HS~+~CLES]~-~SRS[C2HS]~(mu*V%.%log(mu*A)^-1)))) +
+ # ggtitle('C2HS + CLES vs. C2HS Alone  ') +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=25, face='bold'), 
+        axis.title.x = element_text(size=27, face="bold"),
+        axis.title.y = element_text(size=27, face="bold"),
+        strip.text.x = element_text(size = 22, face="bold"),
+        strip.text.y = element_text(size = 22, face="bold"),
+        axis.text = element_text(size=22, face="bold"),
+        ) + 
+  geom_hline(yintercept=0, color='darkgray') + 
+  ggsave(file="C:\\Users\\Ian\\Downloads\\c2hs-cles-vs-c2hs.png", units='in', width=12, height=10, dpi=300)
 
-ggplot(df) + 
-geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
- # facet_grid(cols=vars(Side)) +
-        scale_x_discrete(labels = wrap_format(10))+
-  geom_text(aes(Day,Estimate, label = P_Label), hjust = 2) +
-    ylab('\U0394Sensitivity (mV/A)') +
-  ggtitle('C2HS+EES vs. C2HS+Sham') +
-  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
@@ -74,17 +104,27 @@ geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, col
 
 df =
   df1 %>%
-  filter(Model == 'Left vs. Right') %>%
-  filter(Group == 'C2HS+EES')
+  filter(Model == 'Left vs. Right')# %>%
+ # filter(Group == 'C2HS+EES')
 
-ggplot(df) + 
-geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, color=Day), position = position_dodge(width = 1), size=0.5) + 
-  facet_grid(cols=vars(Group))+
-        scale_x_discrete(labels = wrap_format(10)) + 
-  geom_text(aes(Day,Estimate, label = P_Label), hjust=1) +
-      ylab('\U0394Sensitivity (mV/A)') +
-  ggtitle('Left vs. Right') +
-  theme(plot.title = element_text(hjust = 0.5))
+df$Group_f = factor(df$Group, levels=c('C2HS + CLES','C2HS', 'Intact + CLES', 'Intact'))
+
+plot3 <- ggplot(df) + 
+  geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high), size=1) + 
+  facet_grid(.~Group_f, scales = "free", space='free') +
+  ylab(bquote(bold(SRS[Ipsilesional]~-~SRS[Contralesional]~(mu*V%.%log(mu*A)^-1)))) +
+  geom_text(aes(x=Day,y=ci_high, label=P_Label), vjust=-0.05, size=10) +
+  #ggtitle('Ipsilesional vs. Contralesional') +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=25, face='bold'), 
+        axis.title.x = element_text(size=27, face="bold"),
+        axis.title.y = element_text(size=27, face="bold"),
+        strip.text.x = element_text(size = 22, face="bold"),
+        strip.text.y = element_text(size = 22, face="bold"),
+        axis.text = element_text(size=22, face="bold"),
+        ) + 
+  geom_hline(yintercept=0, color='darkgray') + 
+  ggsave(file="C:\\Users\\Ian\\Downloads\\ipsilesional-vs-contralesional.png", units='in', width=12, height=10, dpi=300)
 
 
 ```
@@ -99,18 +139,42 @@ geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high, group=Day, col
 
 df =
   df1 %>%
-  filter(Model == 'Day [4,3,2] vs. Day 1')%>%
-  filter(Side == 'Left')%>%
-  filter(Group == 'C2HS+EES')
+  filter(Model == 'Day [4,3,2] vs. Day 1')#%>%
+  #filter(Side == 'Left')%>%
+  #filter(Group == 'C2HS+EES')
 
-ggplot(df) + 
-geom_pointrange(aes(x=Predictor, y=Estimate, ymin=ci_low, ymax=ci_high, group=Predictor, color=Predictor), position = position_dodge(width = 1), size=0.5) + 
-  facet_grid(rows=vars(Group), cols=vars(Side)) +
-      scale_x_discrete(labels = wrap_format(10)) +
-  geom_text(aes(Predictor,Estimate, label = P_Label), hjust = 2) +
-        ylab('\U0394Sensitivity (mV/A)') +
-  ggtitle('Change from Day 1') +
-  theme(plot.title = element_text(hjust = 0.5))
+df$Group_f = factor(df$Group, levels=c('C2HS + CLES','C2HS', 'Intact + CLES', 'Intact'))
+df$Side_f = factor(df$Side, levels=c('Ipsilesional','Contralesional'))
+
+
+everysecond <- function(x){
+  x <- sort(unique(x))
+  x[seq(2, length(x), 2)] <- ""
+  x
+}
+
+plot4 <- ggplot(df) + 
+  geom_pointrange(aes(x=Day, y=Estimate, ymin=ci_low, ymax=ci_high), size=1) + 
+  facet_grid(rows=vars(Group_f), cols=vars(Side_f)) +
+  
+  geom_text(aes(x=Day,y=ci_high, label=P_Label), vjust=-0.05, size=10) +
+  ylab(bquote(bold(SRS[Day[n]]~-~SRS[Day[0]]~(mu*V%.%log(mu*A)^-1)))) +
+ # ggtitle('Difference from Day 0') +
+  
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=25, face='bold'), 
+        axis.title.x = element_text(size=27, face="bold"),
+        axis.title.y = element_text(size=27, face="bold"),
+        strip.text.x = element_text(size = 22, face="bold"),
+        strip.text.y = element_text(size = 22, face="bold"),
+        axis.text = element_text(size=22, face="bold"),
+        )+
+  geom_hline(yintercept=0, color='darkgray') + 
+  scale_y_continuous(limits=c(-400,1000), breaks = seq(-500, 1000, by = 500)) + 
+  ggsave(file="C:\\Users\\Ian\\Downloads\\difference-from-day-1.png", units='in', width=12, height=10, dpi=300)
 
 
 ```
+
+
+

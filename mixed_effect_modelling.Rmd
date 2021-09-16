@@ -43,24 +43,25 @@ df_neilsen = df_neilsen[,!(names(df_neilsen) %in% drop)]
 #### C2HS+EES vs. NoInj+EES ####
 ```{r}
 
-# compare: C2HS+EES vs. NoInj+EES, single side, single day
+#### compare: C2HS+EES vs. NoInj+EES, single side, single day
 
+
+# format dataframe
 df = 
   df_neilsen %>% 
   filter(Therapy == "Yes")%>% 
-  filter(Side == "Right")%>% # change which side is being compared here
+  filter(Side == "Left")%>% # change which side is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
-  filter(Day == 1) # change which day is being compared here
+  filter(Day == 2) # change which day is being compared here
 
-# Random Slope
+# fit linear mixed effects model comparing slopes (fixed intercept, random slope)
 fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Injury + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
-
-#plot_model(fit)
-tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
+# report(fit)
+# summarize model fit
+# tab_model(fit)
 summary(fit)
 
-#contr.sum(fit)
 ```
 
 
@@ -79,9 +80,9 @@ df =
 
 # Random Slope
 fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Therapy + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
-
+report(fit)
 #plot_model(fit)
-tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
+#tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
 #summary(fit)
 
 ```
@@ -94,10 +95,10 @@ tab_model(fit, show.icc = FALSE, show.re.var = FALSE)
 
 df = 
   df_neilsen %>% 
-  filter(Injury == "No" & Therapy == "No")%>% # change which group is being compared here
+  filter(Injury == "No" & Therapy == "Yes")%>% # change which group is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
-  filter(Day == 1) # change which day is being compared here
+  filter(Day == 3) # change which day is being compared here
   
 # Random Slope
 fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Side + (0 + log(Stim_Amp) |Animal), data=df, REML = F)
@@ -118,7 +119,8 @@ df =
   filter(Injury == "No" & Therapy == "No")%>% # change which group is being compared here
   filter(Metric == "p2p")%>% # change which metric is used here
   filter(Time_Bin == "1_to_21ms")%>%
-  filter(Side == 'Right') # change which side is being compared here
+  filter(Side == 'Left') # change which side is being compared here
+
   
 # Random Slope
 fit = lmer(evoked_potential_output ~ log(Stim_Amp) * Day + (0 + log(Stim_Amp) |Animal), data=df, REML = F)

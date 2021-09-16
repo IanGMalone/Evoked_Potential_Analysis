@@ -1,0 +1,263 @@
+---
+title: "basic-plots"
+author: "Ian Malone"
+date: "7/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(stringr)
+library(scales)
+library(ggpubr)
+library(viridis)
+library(patchwork)
+```
+
+
+
+```{r signal plot}
+dffsig <- read.csv("D:\\Neilsen\\Dataframes\\df_signal_plot.csv") #desktop
+
+df <- dffsig %>%
+  mutate(Day = as_factor(Day))%>%
+  mutate(Stim_Amplitude = as_factor(Stim_Amplitude)) %>%
+  filter(Stim_Amplitude %in% c(100, 200, 300, 400, 500, 600))
+
+
+signal_plot <- ggplot(data=df, aes(x=Time, y=STA_Amplitude, color=Stim_Amplitude)) +
+  geom_path(size=2.5) + 
+  facet_wrap(facets=vars(Day), nrow=2, ncol=2) +
+  # annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, size = 1.5) +
+  # annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf,size = 1.5) +
+  labs(y='Amplitude (mV)', x='Time (ms)', color=bquote(bold(paste("Stimulation\nAmplitude (",mu,"A)")))) +
+  scale_color_viridis(discrete=TRUE, direction=-1, alpha=0.65, option='plasma') +
+  theme_bw() +
+ # guides(color=guide_colorbar)
+  theme(plot.title = element_text(hjust = 0.5, size=30, face='bold'), 
+        axis.title.x = element_text(size=35, face="bold"),
+        axis.title.y = element_text(size=35, face="bold"),
+        strip.text.x = element_text(size = 27, face="bold"),
+        strip.text.y = element_text(size = 27, face="bold"),
+        # strip.placement = "outside",
+        # strip.background = element_blank(),
+        # panel.spacing.y = unit(2, "lines"),
+        axis.text = element_text(size=27, face="bold"),
+        legend.title=element_text(size=27, face="bold", vjust=-0.2), 
+        legend.text=element_text(size=27, face="bold"),
+        legend.position="top") +
+  geom_hline(yintercept=0, color='darkgray') + 
+  ggsave(file="C:\\Users\\Ian\\Downloads\\signal-plot.png", units='in', width=12, height=10, dpi=300)
+
+
+
+```
+
+
+```{r points plot}
+dffpoint <- read.csv("D:\\Neilsen\\Dataframes\\df_points_plot.csv") #desktop
+dffpoint$Day <- dffpoint$Day - 1
+
+df <- dffpoint %>%
+  mutate(Day = as_factor(Day))#%>%
+ # mutate(Stim_Amp = as_factor(Stim_Amp))
+
+
+points_plot <- ggplot(data=df, aes(x=Stim_Amp, y=Scalar_Original_Value, color=Day)) +
+  geom_point(size=8) + 
+  # annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, size = 1.5) +
+  # annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf,size = 1.5) +
+  ylab('Peak-to-Peak Amplitude (mV)') +
+  xlab(bquote(bold(paste("Stimulation Amplitude (",mu,"A)")))) +
+
+  scale_color_viridis(discrete=TRUE, direction=-1, alpha=0.65, option='D') +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=30, face='bold'), 
+        axis.title.x = element_text(size=35, face="bold"),
+        axis.title.y = element_text(size=35, face="bold"),
+        strip.text.x = element_text(size = 27, face="bold"),
+        strip.text.y = element_text(size = 27, face="bold"),
+        axis.text = element_text(size=27, face="bold"),
+        legend.title=element_text(size=28, face="bold"), 
+        legend.text=element_text(size=28, face="bold"),
+        legend.position="top")+
+  ylim(0,3.5) +
+  coord_cartesian(expand = FALSE) +
+  geom_hline(yintercept=0, color='darkgray') + 
+  scale_x_continuous(breaks = c(200, 400, 600), limits=c(100,625)) + 
+
+  ggsave(file="C:\\Users\\Ian\\Downloads\\point-plot.png", units='in', width=12, height=10, dpi=300)
+
+
+
+```
+
+
+
+
+
+```{r group plot}
+dffgroups <- read.csv("D:\\Neilsen\\Dataframes\\df_groups_plot.csv") #desktop
+dffgroups$Day <- dffgroups$Day - 1
+
+
+df <- dffgroups %>%
+  mutate(Day = as_factor(Day))%>%
+  mutate(Group = as_factor(Group))%>%
+  mutate(Side = as_factor(Side))
+
+df$Group_f = factor(df$Group, levels=c('C2HS + CLES','C2HS', 'Intact + CLES', 'Intact'))
+
+
+group_plot <- ggplot(data=df, aes(x=Stim_Amp, y=Scalar_Original_Value, color=Day)) +
+  geom_point(size=3, alpha=0.1) + 
+  geom_smooth(method='lm', se=FALSE, size=1.5) +
+  facet_grid(rows=vars(Side), cols=vars(Group_f), scales='free_x') +
+  # annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, size = 1.5) +
+  # annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf,size = 1.5) +
+  theme_bw() +
+  theme(axis.line=element_line()) +
+  ylab('Peak-to-Peak Amplitude (mV)') +
+  xlab(bquote(bold(paste("Stimulation Amplitude (",mu,"A)")))) +
+  scale_color_viridis(discrete=TRUE, direction=-1, option='D') +
+  theme(plot.title = element_text(hjust = 0.5, size=25, face='bold'), 
+        axis.title.x = element_text(size=30, face="bold"),
+        axis.title.y = element_text(size=30, face="bold"),
+        strip.text.x = element_text(size = 22, face="bold"),
+        strip.text.y = element_text(size = 22, face="bold"),
+        # strip.placement = "outside",
+        # strip.background = element_blank(),
+        # panel.spacing.y = unit(2, "lines"),
+        axis.text = element_text(size=22, face="bold"),
+        legend.title=element_text(size=22, face="bold"), 
+        legend.text=element_text(size=22, face="bold"),
+        legend.position="top")+
+  scale_x_continuous(limits=c(50,650), breaks = seq(200, 600, by = 200)) + 
+  # coord_cartesian(expand = FALSE) +
+  ylim(0, 8)
+  # + ggsave(file="C:\\Users\\Ian\\Downloads\\group-plot.png", units='in', width=12, height=10, dpi=300)
+
+# 
+#   ggarrange(group_plot, 
+#           labels = c("A"),
+#           font.label = list(size = 40),
+#           ncol = 1, nrow = 1) +
+    ggsave(file="C:\\Users\\Ian\\Downloads\\group_plot.png", units='in', width=12, height=10, dpi=300)
+```
+
+
+
+
+```{r nyquist plot}
+dffimp <- read.csv("C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\impedance_plotting.csv") #desktop
+
+df <- dffimp %>%
+  mutate(Day = as_factor(Day))%>%
+  mutate(Group = as_factor(Group))%>%
+  mutate(Side = as_factor(Side))#%>%
+  #filter(Average==0)
+
+
+#data=subset(df, Average==0)
+
+nyquist_plot <- ggplot(data=df, aes(x=z_real, y=z_imag, color=Group)) +
+  geom_point(data=subset(df, Average==0), size=3, alpha=0.2) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, size=3))) +
+  facet_grid(cols=vars(Day)) +
+  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+              labels = trans_format("log10", math_format(10^.x)),
+              limits = c(100, 100000)) +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+              labels = trans_format("log10", math_format(10^.x)),
+              limits = c(100, 100000)) +
+  theme(aspect.ratio = 1) +
+  labs(y=bquote(bold(paste("Z Imaginary (",Omega,")"))), x=bquote(bold(paste("Z Real (",Omega,")")))) +
+  scale_color_viridis(discrete=TRUE, direction=-1, alpha=0.65, option='turbo') +
+  theme_bw() +
+  # annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, size = 1.5) +
+  # annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf,size = 1.5) +
+  theme(plot.title = element_text(hjust = 0.5, size=30, face='bold'),
+        axis.title.x = element_text(size=35, face="bold"),
+        axis.title.y = element_text(size=35, face="bold"),
+        strip.text.x = element_text(size = 27, face="bold"),
+        strip.text.y = element_text(size = 27, face="bold"),
+        # strip.placement = "outside",
+        # strip.background = element_blank(),
+        # panel.spacing.y = unit(2, "lines"),
+        axis.text = element_text(size=27, face="bold"),
+        legend.title=element_text(size=27, face="bold"),
+        legend.text=element_text(size=24, face="bold"),
+        legend.position="top") +
+  
+  ggsave(file="C:\\Users\\Ian\\Downloads\\nyquist-plot.png", units='in', width=12, height=7.3, dpi=300)
+
+
+```
+
+
+
+
+
+```{r 1k plot}
+dff1k <- read.csv("C:\\Users\\Ian\\Google Drive\\IanGMalone\\UF\\Lab\\Neilsen_Project_Files\\total_stats_impedance.csv") #desktop
+
+df <- dff1k %>%
+  mutate(Day = as_factor(Day))%>%
+  mutate(Group = as_factor(Group))%>%
+  mutate(Side = as_factor(Side))%>%
+  mutate(Animal = as_factor(Animal)) %>%
+  filter(f == 1000)
+
+# anova_impedance <- aov(log(Z) ~ Day*Group, data = df)
+# report(anova_impedance)
+# summary(anova_impedance)
+# TukeyHSD(anova_impedance)
+
+
+onek_plot <- ggplot(data=df, aes(x=Group, y=Z, color=factor(Day))) +
+  # geom_violin(trim=FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_boxplot(outlier.shape = NA, lwd=1) +
+  geom_point(size=3, alpha=0.3,position=position_jitterdodge(jitter.width=0.1, dodge.width=0.9)) +
+  scale_color_manual(name="Day", values = c("grey70", "grey0")) +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+              labels = trans_format("log10", math_format(10^.x)),
+              limits = c(100, 1000000)) +
+  ylab(bquote(bold(paste("1 kHz Impedance (",Omega,")")))) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size=30, face='bold'),
+        axis.title.x = element_text(size=35, face="bold"),
+        axis.title.y = element_text(size=35, face="bold"),
+        strip.text.x = element_text(size = 27, face="bold"),
+        strip.text.y = element_text(size = 27, face="bold"),
+        axis.text = element_text(size=27, face="bold"),
+        legend.title=element_text(size=27, face="bold"),
+        legend.text=element_text(size=27, face="bold"),
+        legend.position="top") +
+  # annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, size = 1.5) +
+  # annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf,size = 1.5) +
+  ggsave(file="C:\\Users\\Ian\\Downloads\\1k-plot.png", units='in', width=12, height=10, dpi=300)
+#   
+
+```
+
+
+
+
+
+#### Figure Panels ####
+```{r}
+
+ggsave((signal_plot / points_plot) +  plot_annotation(tag_levels = 'A') &
+  theme(plot.tag = element_text(size = 50)), filename="C:\\Users\\Ian\\Downloads\\methods-patch.png", width=12, height=20, dpi=300)
+
+
+
+ggsave((nyquist_plot / onek_plot) +  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 38)), filename="C:\\Users\\Ian\\Downloads\\impedance-patch.png", width=12, height=15, dpi=300)
+
+```
+
+
+

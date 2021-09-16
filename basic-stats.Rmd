@@ -10,9 +10,20 @@ output: html_document
 library(tidyverse)
 library(ggpubr)
 library(rstatix)
+library(ggplot2)
+library(ggbeeswarm)
+library(scales)
+library(ggstatsplot)
+library(Rcpp)
+library(report)
+library(plyr)
+library(dplyr)
+library(ggsignif)
 
-df_timebin1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_anova.csv') #desktop
+
+df_timebin1 <- read.csv(file = 'D:\\Neilsen\\Dataframes\\df_timebin.csv') #desktop
 #df_timebin1 <- read.csv(file = 'C:\\Users\\iangm\\Google Drive\\IanGMalone\\Desktop_Stuff\\For-Me\\Neilsen\\Dataframes\\df_anova.csv') #laptop
+df_timebin1$Day <- df_timebin1$Day - 1
 
 df_timebin <- df_timebin1 %>%
   mutate(Group = as_factor(Group)) %>% 
@@ -48,22 +59,7 @@ df_peak_time = subset(df_peak_time, select = -c(X) )
 ```
 
 
-#### ANOVA and pairwise comparisons on time bin data ####
-```{r}
-df = 
-  df_timebin %>% 
-  filter(Day ==1 | Day == 4) %>% # change which day is being compared here
-  filter(Side == 'Left') %>%
-  filter(Metric == 'p2p') %>%
-  filter(Therapy == 'No')%>%
-  filter(Injury == 'Yes')%>%
-  filter(Stim_Amp > 200)
 
-anova_time_bin <- aov(Scalar_Original_Value ~ Time_Bin*Day, data = df)
-summary(anova_time_bin)
-TukeyHSD(anova_time_bin)
-
-```
 
 
 #### ANOVA and pairwise comparisons on motor threshold data ####
@@ -71,134 +67,52 @@ TukeyHSD(anova_time_bin)
 
 df = 
   df_motor_threshold %>% 
- filter(Side == 'Left') %>%
- # filter(Injury == 'Yes') %>%
+  #filter(Side == 'Right') %>%
+  # filter(Injury == 'Yes') %>%
+  # filter(Therapy == 'Yes') %>%
   filter(Day == 4)
 
-#anova_motor_threshold <- aov(Motor_Threshold ~ Therapy, data = df)
-#summary(anova_motor_threshold)
-#TukeyHSD(anova_motor_threshold)
+# t.test(Motor_Threshold ~ Therapy, data = df)
+report(t.test(Motor_Threshold ~ Therapy, data = df))
+# anova_motor_threshold <- aov(Motor_Threshold ~ Therapy*Injury, data = df)
+# report(anova_motor_threshold)
+# summary(anova_motor_threshold)
+# TukeyHSD(anova_motor_threshold)
+# kw_peak_time <- kruskal.test(Peak_Time ~ Group, data = df)
+# w_peak_time <- pairwise.wilcox.test(df$Peak_Time, df$Group, p.adjust.method = "holm")
 
-res <- t.test(Motor_Threshold ~ Therapy, data = df, var.equal = FALSE)
-res
-res$p.value
+# <- t.test(Motor_Threshold ~ Therapy, data = df, var.equal = FALSE)
+#res
+#res$p.value
+
+# df$Responder <- ifelse(df$Animal %in% c('N09', 'N13', 'N27', 'N30'), 'Responder', 'Nonresponder')
+# 
+# 
+# motor_thresh_plot <- ggplot(df, aes(x=Therapy, y=Motor_Threshold)) +
+#   #geom_violin(trim=FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+#   geom_boxplot(outlier.shape = NA, lwd=1) + 
+#   geom_jitter(size=3, alpha=0.2,width=0.15) +
+#   geom_signif(comparisons = list(c("No","Yes")),annotation="***", tip_length = 0, size = 1.5, textsize = 15, y_position = 600,
+#                 test = "t.test") +
+#   ylab(bquote(bold(paste("Day 3 Motor Threshold (",mu,"A)")))) +
+#   xlab("Received CLES?") +
+#   ylim(100,650) +
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5, size=35, face='bold'),
+#         axis.title.x = element_text(size=38, face="bold"),
+#         axis.title.y = element_text(size=38, face="bold"),
+#         strip.text.x = element_text(size = 32, face="bold"),
+#         strip.text.y = element_text(size = 32, face="bold"),
+#         axis.text = element_text(size=32, face="bold"),
+#         legend.title=element_text(size=32, face="bold"),
+#         legend.text=element_text(size=32, face="bold"),
+#         legend.position="top") +
+#   ggsave(file="C:\\Users\\Ian\\Downloads\\motor_thresh_plot.png", units='in', width=12, height=10, dpi=300)
+
+
+
 
 ```
-
-
-
-
-
-
-
-#### Time to Peak (latency analysis) ####
-
-```{r Dataframe}
-
-df = 
-  df_peak_time %>% 
-  filter(Side == "Left") # set the side you are testing here
-
-```
-
-
-```{r Summary Statistics}
-
-df %>%
-  group_by(Injury, Therapy, Day) %>%
-  get_summary_stats(Peak_Time, type = "mean_sd")
-
-```
-
-
-```{r Visualization}
-
-bxp <- ggboxplot(
-  df, x = "Injury", y = "Peak_Time",
-  color = "Day", palette = "jco",
-  facet.by = "Therapy", short.panel.labs = FALSE
-  )
-bxp
-
-```
-
-```{r Check Outliers}
-
-df %>%
-  group_by(Injury, Therapy, Day) %>%
-  identify_outliers(Peak_Time)
-# we do have extreme outliers..
-# run anova on entire data
-# rerun anova without outliers
-# if same, then report analysis on full data
-# if different, run a non-parametric (kruskal wallis) or just report analysis with an without outliers
-```
-
-```{r Check Normality (Shapiro-Wilks)}
-
-df %>%
-  group_by(Injury, Therapy, Day) %>%
-  shapiro_test(Peak_Time)
-
-# data are not normally distributed
-```
-
-```{r Check Normality QQ Plot}
-
-ggqqplot(df, "Peak_Time", ggtheme = theme_bw()) +
-  facet_grid(Injury + Therapy ~ Day, labeller = "label_both")
-
-# data potentially look normally distributed
-```
-
-```{r Computation}
-
-res.aov <- anova_test(
-  data = df, dv = Peak_Time, wid = Animal,
-  between = c(Injury, Therapy, Day)
-  )
-get_anova_table(res.aov)
-
-```
-
-```{r}
-two.way <- df %>%
-  group_by(Injury) %>%
-  anova_test(dv = Peak_Time, wid = Animal, between = c(Therapy, Day))
-get_anova_table(two.way)
-```
-
-
-
-
-```{r Post Hoc Tests}
-
-# Pairwise comparisons
-pwc <- df %>%
-  group_by(Therapy, Day) %>%
-  pairwise_t_test(Peak_Time ~ Injury, paired = FALSE, p.adjust.method = "bonferroni") #%>%
-#  select(-df, -statistic) # Remove details
-# Show comparison results for "diet:no,exercises:yes" groups
-#pwc %>% filter(diet == "no", exercises == "yes") %>%
-#  select(-p)     # remove p columns
-pwc
-```
-
-```{r Report}
-
-# Visualization: box plots with p-values
-pwc <- pwc %>% add_xy_position(x = "exercises")
-pwc.filtered <- pwc %>% 
-  filter(diet == "no", exercises == "yes")
-bxp + 
-  stat_pvalue_manual(pwc.filtered, tip.length = 0, hide.ns = TRUE) +
-  labs(
-    subtitle = get_test_label(res.aov, detailed = TRUE),
-    caption = get_pwc_label(pwc)
-  )
-
-```
-
 
 
 
@@ -208,15 +122,119 @@ bxp +
 
 df = 
   df_peak_time %>% 
+# filter(Side == 'Right') %>%
+# filter(Injury == 'No') %>%
+ # filter(Therapy == 'No') %>%
+  filter(Day == 4)  %>%
+  filter(Stim_Amp > 270 & Stim_Amp < 600)
+
+df$Group <- mapvalues(df$Group, 
+          from=c("Yes Injury, Yes EES", "Yes Injury, No EES", "No Injury, Yes EES", "No Injury, No EES"), 
+          to=c("C2HS + CLES", "C2HS", "Intact + CLES", "Intact"))
+
+df$Group <- factor(df$Group, levels=c("C2HS + CLES", "C2HS", "Intact + CLES", "Intact"))
+
+
+df$Responder <- ifelse(df$Animal %in% c('N09', 'N13', 'N27', 'N30'), 'Responder', 'Nonresponder')
+ 
+anova_peak_time <- aov(Peak_Time ~ Therapy*Injury, data = df)
+report(anova_peak_time)
+# # summary(anova_peak_time)
+TukeyHSD(anova_peak_time, conf.level = 0.95)
+# kw_peak_time <- kruskal.test(Peak_Time ~ Group, data = df)
+# w_peak_time <- pairwise.wilcox.test(df$Peak_Time, df$Group, p.adjust.method = "holm")
+
+# time_peak_plot <- ggplot(df, aes(x=Group, y=Peak_Time)) +
+#   #geom_violin(trim=FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+#   geom_boxplot(outlier.shape = NA, lwd=1) + 
+#   geom_jitter(size=3, alpha=0.2,width=0.15) +
+#   geom_signif(comparisons=list(c("C2HS + CLES", "Intact + CLES"),
+#                                c("Intact + CLES", "Intact")),
+#               map_signif_level=TRUE, y_position = c(20, 23), tip_length = 0, size = 1.5, textsize = 15, test = "t.test") +
+#   ylab("Day 3 sMEP Peak Time (ms)") +
+#   ylim(0, 25) +
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5, size=35, face='bold'),
+#         axis.title.x = element_text(size=38, face="bold"),
+#         axis.title.y = element_text(size=38, face="bold"),
+#         strip.text.x = element_text(size = 32, face="bold"),
+#         strip.text.y = element_text(size = 32, face="bold"),
+#         axis.text.x = element_text(size=32, face="bold"),
+#         axis.text.y = element_text(size=32, face="bold"),
+#         legend.title=element_text(size=32, face="bold"),
+#         legend.text=element_text(size=32, face="bold"),
+#         legend.position="top") +
+#   ggsave(file="C:\\Users\\Ian\\Downloads\\time_peak_plot.png", units='in', width=12, height=10, dpi=300)
+
+
+
+####color by Responder or Nonresponder ####
+# my_comparisons <- list( c("No Injury, Yes EES", "Yes Injury, Yes EES"),
+#                         c("No Injury, Yes EES", "No Injury, No EES"))
+# 
+# 
+# p <- ggviolin(df, x = "Group", y = "Peak_Time", add = "boxplot") +
+#   stat_compare_means(method = "anova", label.y = 40) + 
+#   stat_compare_means(label = "p.signif", method = "t.test", comparisons = my_comparisons)
+# 
+# p
+
+```
+
+
+
+
+
+
+#### ANOVA and pairwise comparisons on time bin ipsi data ####
+```{r}
+df = 
+  df_timebin %>% 
+  filter(Day ==0 | Day == 3) %>% # change which day is being compared here
   filter(Side == 'Left') %>%
- # filter(Injury == 'Yes') %>%
-  filter(Day == 4)
+  filter(Metric == 'p2p') %>%
+  filter(Therapy == 'Yes')%>%
+  filter(Injury == 'Yes') %>%
+  filter(Stim_Amp > 270 & Stim_Amp < 600)
 
-anova_peak_time <- aov(Peak_Time ~ Injury*Therapy, data = df)
-summary(anova_peak_time)
-TukeyHSD(anova_peak_time)
+anova_time_bin <- aov(Scalar_Original_Value ~ Time_Bin*Day, data = df)
+tukey_hsd(anova_time_bin)
+report(anova_time_bin)
+# summary(anova_time_bin)
+# TukeyHSD(anova_time_bin)
 
-
+# df$Responder <- ifelse(df$Animal %in% c('N09', 'N13', 'N27', 'N30'), 'Responder', 'Nonresponder')
+# 
+# df$Time_Bin <- mapvalues(df$Time_Bin,
+#           from=c("1_to_5ms", "5_to_9ms", "9_to_13ms", "13_to_17ms", "17_to_21ms"),
+#           to=c("1 to 5", "5 to 9", "9 to 13", "13 to 17", "17 to 21"))
+# 
+# time_bin_ipsi_plot <- ggplot(df, aes(x=Time_Bin, y=Scalar_Original_Value, color=factor(Day))) +
+#   #geom_violin(trim=FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+#   geom_boxplot(outlier.shape = NA, lwd=1) +
+#   geom_point(size=3, alpha=0.2,position=position_jitterdodge(dodge.width=0.9)) +
+#   geom_signif(comparisons = list(c("9 to 13")),
+#               map_signif_level=TRUE, tip_length = 0) +
+#   scale_color_manual(name='Day', values = c("grey70", "grey0")) +
+#   scale_y_continuous(breaks = c(0, 2, 4, 6, 8), limits=c(0,8)) +
+#   ylab("Peak-to-Peak Amplitude (mV)") +
+#   xlab("Time Bin (ms)") +
+#   # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#   #             labels = trans_format("log10", math_format(10^.x))) +
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5, size=35, face='bold'),
+#         axis.title.x = element_text(size=38, face="bold"),
+#         axis.title.y = element_text(size=38, face="bold"),
+#         strip.text.x = element_text(size = 32, face="bold"),
+#         strip.text.y = element_text(size = 32, face="bold"),
+#         axis.text = element_text(size=32, face="bold"),
+#         legend.title=element_text(size=32, face="bold"),
+#         legend.text=element_text(size=32, face="bold"),
+#         legend.position="top") +
+#   geom_signif(y_position = c(5,5), xmin = c(1.8, 2.8), xmax = c(2.2, 3.2), annotation = c("***", "***"), tip_length = 0, color='black',
+#               size = 1.5, textsize = 15) +
+#   geom_text(x = 0.9, y = 8.2, label = "Ipsilesional", show.legend=FALSE, size=10) +
+#   ggsave(file="C:\\Users\\Ian\\Downloads\\time_bin_ipsi_plot.png", units='in', width=12, height=10, dpi=300)
 
 
 ```
@@ -225,6 +243,69 @@ TukeyHSD(anova_peak_time)
 
 
 
+
+#### ANOVA and pairwise comparisons on time bin contra data ####
+```{r}
+df = 
+  df_timebin %>% 
+  filter(Day ==0 | Day == 3) %>% # change which day is being compared here
+  filter(Side == 'Right') %>%
+  filter(Metric == 'p2p') %>%
+  filter(Therapy == 'Yes')%>%
+  filter(Injury == 'Yes')%>%
+  filter(Stim_Amp < 600)
+
+anova_time_bin <- aov(Scalar_Original_Value ~ Time_Bin*Day, data = df)
+tukey_hsd(anova_time_bin)
+report(anova_time_bin)
+#summary(anova_time_bin)
+# TukeyHSD(anova_time_bin)
+# pairwise.t.test(df$score, data$technique, p.adjust.method="bonferroni")
+
+
+# df$Responder <- ifelse(df$Animal %in% c('N09', 'N13', 'N27', 'N30'), 'Responder', 'Nonresponder')
+# 
+# df$Time_Bin <- mapvalues(df$Time_Bin,
+#           from=c("1_to_5ms", "5_to_9ms", "9_to_13ms", "13_to_17ms", "17_to_21ms"),
+#           to=c("1 to 5", "5 to 9", "9 to 13", "13 to 17", "17 to 21"))
+# 
+# time_bin_contra_plot <- ggplot(df, aes(x=Time_Bin, y=Scalar_Original_Value, color=factor(Day))) +
+#   # geom_violin(trim=FALSE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+#   geom_boxplot(outlier.shape = NA, lwd=1) +
+#   geom_point(size=3, alpha=0.2,position=position_jitterdodge(dodge.width=0.9)) +
+#   scale_color_manual(name='Day', values = c("grey70", "grey0")) +
+#   scale_y_continuous(breaks = c(0, 2, 4, 6, 8), limits=c(0,8)) +
+#   ylab("Peak-to-Peak Amplitude (mV)") +
+#   xlab("Time Bin (ms)") +
+#   # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#   #             labels = trans_format("log10", math_format(10^.x))) +
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5, size=35, face='bold'),
+#         axis.title.x = element_text(size=38, face="bold"),
+#         axis.title.y = element_text(size=38, face="bold"),
+#         strip.text.x = element_text(size = 32, face="bold"),
+#         strip.text.y = element_text(size = 32, face="bold"),
+#         axis.text = element_text(size=32, face="bold"),
+#         legend.title=element_text(size=32, face="bold"),
+#         legend.text=element_text(size=32, face="bold"),
+#         legend.position="top") +
+#   geom_signif(y_position = c(5,5), xmin = c(0.8, 2.8), xmax = c(1.2, 3.2), annotation = c("**", "***"), tip_length = 0, color='black',
+#               size = 1.5, textsize = 15) +
+#   geom_text(x = 1.05, y = 8.2, label = "Contralesional", show.legend=FALSE, size=10) +
+#   ggsave(file="C:\\Users\\Ian\\Downloads\\time_bin_contra_plot.png", units='in', width=12, height=10, dpi=300)
+
+
+```
+
+
+
+#### Figure Panels ####
+```{r}
+
+ggsave((motor_thresh_plot + time_peak_plot) / (time_bin_ipsi_plot + time_bin_contra_plot) +  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 50)), filename="C:\\Users\\Ian\\Downloads\\box-patch.png", width=24, height=20, dpi=300)
+
+```
 
 
 
